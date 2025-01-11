@@ -3,17 +3,18 @@
  * Notes are grouped and ordered by date, with a FAB for creating new notes.
  */
 
-import React, { useEffect, useRef } from 'react';
-import { View, FlatList, StyleSheet, AppState } from 'react-native';
+import React, { useEffect, useRef, useLayoutEffect } from 'react';
+import { View, FlatList, StyleSheet, AppState, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import NoteItem from '../components/NoteItem';
-import { FAB } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
 import { fetchNotes } from '../store/noteSlice';
 import { AppDispatch } from '../store/store';
 import { v4 as uuidv4 } from 'uuid';
+import { Plus } from 'lucide-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -47,9 +48,24 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
   }, []);
 
   // Fetch notes when component mounts
-  useEffect(() => {
-    dispatch(fetchNotes());
-  }, [dispatch]);
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchNotes());
+    }, [])
+  );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('NewNote')}
+          style={{ marginRight: 16 }}
+        >
+          <Plus size={24} color="#000" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   return (
     <View style={styles.container}>
@@ -58,12 +74,6 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
         renderItem={({ item }) => <NoteItem note={item} />}
         keyExtractor={(item) => item.id || uuidv4()}
       />
-      {/* FAB for creating new notes */}
-      <FAB
-        style={styles.fab}
-        icon="plus"
-        onPress={() => navigation.navigate('NewNote')}
-      />
     </View>
   );
 };
@@ -71,12 +81,6 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
   },
 });
 

@@ -37,11 +37,7 @@ const RecordScreen = () => {
         // Generate new note ID when starting recording
         noteId.current = uuidv4();
         
-        // Clear previous text when starting new recording
-        setTranscribedText('');
-        setSummarizedText('');
         setShowSummarized(false);
-        
         // Start recording
         await voiceService.startListening();
         setIsRecording(true);
@@ -59,6 +55,8 @@ const RecordScreen = () => {
   // Generate summary using LLM
   const summarizeText = async () => {
     // TODO: Implement llama.rn summarization
+    console.log('Summarizing text:', transcribedText);
+    setSummarizedText(transcribedText);
     setShowSummarized(true);
   };
 
@@ -80,6 +78,7 @@ const RecordScreen = () => {
     const voiceService = VoiceService.getInstance();
     
     return () => {
+      console.log('Cleaning up voice service');
       voiceService.destroy().catch(console.error);
     };
   }, []);
@@ -97,29 +96,9 @@ const RecordScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Text display area with summary button */}
+      {/* Header with buttons */}
       <View style={styles.header}>
-        <View style={styles.flex} />
-        <Button
-          mode="text"
-          onPress={() => setShowSummarized(!showSummarized)}
-          disabled={!summarizedText}
-        >
-          {showSummarized ? 'Transcript' : 'Summary'}
-        </Button>
-      </View>
-
-      {/* Scrollable text area */}
-      <ScrollView style={styles.textContainer}>
-        <Text style={styles.text}>
-          {showSummarized ? summarizedText : transcribedText}
-        </Text>
-      </ScrollView>
-
-      {/* Bottom controls */}
-      <View style={styles.bottomContainer}>
-        {/* Summarize button */}
-        {transcribedText && !showSummarized && (
+        {!isRecording && transcribedText && !showSummarized && (
           <Button
             mode="contained"
             onPress={summarizeText}
@@ -128,8 +107,25 @@ const RecordScreen = () => {
             Summarize
           </Button>
         )}
+        <View style={styles.flex} />
+        <Button
+          mode="text"
+          onPress={() => setShowSummarized(!showSummarized)}
+          disabled={!summarizedText}
+        >
+          {showSummarized ? 'Summary' : 'Transcript'}
+        </Button>
+      </View>
 
-        {/* Recording button */}
+      {/* Rest of the content */}
+      <ScrollView style={styles.textContainer}>
+        <Text style={styles.text}>
+          {showSummarized ? summarizedText : transcribedText}
+        </Text>
+      </ScrollView>
+
+      {/* Bottom controls */}
+      <View style={styles.bottomContainer}>
         <Button
           mode="contained"
           onPress={toggleRecording}
@@ -166,11 +162,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   bottomContainer: {
-    gap: 16,
     marginTop: 'auto',
   },
   summarizeButton: {
-    marginBottom: 8,
+    marginRight: 8,
   },
   recordButton: {
     marginBottom: 16,

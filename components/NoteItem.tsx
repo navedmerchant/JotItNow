@@ -9,10 +9,10 @@ import { format } from 'date-fns';
 
 interface NoteItemProps {
   note: {
-    id?: string;  // Make id optional to match Note interface
+    id?: string;
     title: string;
     content: string;
-    date: Date;
+    date: string;
     summary?: string;
   };
   onPress?: () => void;
@@ -23,7 +23,7 @@ const NoteItem: React.FC<NoteItemProps> = ({ note, onPress }) => {
     <TouchableOpacity onPress={onPress} style={styles.container}>
       {/* Note date */}
       <Text style={styles.date}>
-        {format(note.date, 'MMM dd, yyyy')}
+        {format(new Date(note.date), 'MMM dd, yyyy')}
       </Text>
       {/* Note title */}
       <Text style={styles.title}>{note.title}</Text>

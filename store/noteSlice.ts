@@ -3,7 +3,7 @@
  * Handles CRUD operations for notes with SQLite persistence.
  */
 
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { getDatabase } from '../services/database';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,7 +12,7 @@ export interface Note {
   id?: string;
   title: string;
   content: string;
-  date: Date;
+  date: string;
   summary?: string;
 }
 
@@ -36,15 +36,16 @@ export const fetchNotes = createAsyncThunk(
     if (!db) {
       throw new Error('Database not initialized');
     }
-    
+    console.log('Fetching notes');
     try {
       const [results] = await db.executeSql('SELECT * FROM notes ORDER BY date DESC');
       const notes: Note[] = [];
       for (let i = 0; i < results.rows.length; i++) {
+        console.log(results.rows.item(i));
         const row = results.rows.item(i);
         notes.push({
           ...row,
-          date: new Date(row.date),
+          date: row.date,
         });
       }
       return notes;
@@ -57,7 +58,7 @@ export const fetchNotes = createAsyncThunk(
 // Async thunk for adding a new note with persistence
 export const addNoteWithPersistence = createAsyncThunk(
   'notes/addNoteWithPersistence',
-  async (note: Note) => {
+  async (note: Omit<Note, 'date'> & { date: Date }) => {
     const db = getDatabase();
     if (!db) {
       throw new Error('Database not initialized');
@@ -65,13 +66,14 @@ export const addNoteWithPersistence = createAsyncThunk(
 
     const noteToSave = {
       ...note,
-      id: note.id || uuidv4()
+      id: note.id || uuidv4(),
+      date: note.date.toISOString()
     };
     
     try {
       await db.executeSql(
         'INSERT INTO notes (id, title, content, date, summary) VALUES (?, ?, ?, ?, ?)',
-        [noteToSave.id, noteToSave.title, noteToSave.content, noteToSave.date.toISOString(), noteToSave.summary]
+        [noteToSave.id, noteToSave.title, noteToSave.content, noteToSave.date, noteToSave.summary]
       );
       return noteToSave;
     } catch (error) {

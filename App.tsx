@@ -20,6 +20,7 @@ import ChatScreen from './screens/ChatScreen';
 export type RootStackParamList = {
   NoteList: undefined;  // Main screen showing list of notes
   NewNote: undefined;   // Screen for creating new notes
+  EditNote: { noteId: string };  // Add this
 };
 
 export type TabParamList = {
