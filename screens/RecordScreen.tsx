@@ -7,17 +7,22 @@ import 'react-native-get-random-values';
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from 'react-native-paper';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addNoteWithPersistence } from '../store/noteSlice';
-import { AppDispatch } from '../store/store';
+import { AppDispatch, RootState } from '../store/store';
 import VoiceService from '../services/voice';
 import { v4 as uuidv4 } from 'uuid';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
 
-const RecordScreen = () => {
+type RecordScreenProps = {
+  route?: { params?: { noteId?: string } };
+};
+
+const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const notes = useSelector((state: RootState) => state.notes.notes);
   // State for recording and text management
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
@@ -93,6 +98,18 @@ const RecordScreen = () => {
       }
     });
   }, []);
+
+  // Add useEffect to load note data
+  useEffect(() => {
+    const noteId = route?.params?.noteId;
+    if (noteId) {
+      const note = notes.find(n => n.id === noteId);
+      if (note) {
+        setTranscribedText(note.content);
+        setSummarizedText(note.summary || '');
+      }
+    }
+  }, [route?.params?.noteId, notes]);
 
   return (
     <View style={styles.container}>

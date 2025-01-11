@@ -15,6 +15,7 @@ import { AppDispatch } from '../store/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { onDatabaseInitialized } from '../services/database';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -50,9 +51,15 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
   // Fetch notes when component mounts
   useFocusEffect(
     React.useCallback(() => {
+      console.log('useFocusEffect: Fetching notes');
       dispatch(fetchNotes());
     }, [])
   );
+
+  useEffect(() => {
+    console.log('useEffect: Fetching notes');
+    dispatch(fetchNotes());
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -67,11 +74,27 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
     });
   }, [navigation]);
 
+  useEffect(() => {
+    // Register callback for database initialization
+    onDatabaseInitialized(() => {
+      console.log('Database initialized, fetching notes');
+      dispatch(fetchNotes());
+    });
+  }, []);
+
   return (
     <View style={styles.container}>
       <FlatList
         data={notes}
-        renderItem={({ item }) => <NoteItem note={item} />}
+        renderItem={({ item }) => (
+          <NoteItem 
+            note={item} 
+            onPress={() => navigation.navigate('NewNote', { 
+              screen: 'Record',
+              params: { noteId: item.id }
+            })}
+          />
+        )}
         keyExtractor={(item) => item.id || uuidv4()}
       />
     </View>

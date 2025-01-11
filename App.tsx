@@ -3,7 +3,7 @@
  * The app uses a stack navigator for main navigation and a tab navigator for the note creation flow.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
@@ -18,9 +18,12 @@ import ChatScreen from './screens/ChatScreen';
 
 // Type definitions
 export type RootStackParamList = {
-  NoteList: undefined;  // Main screen showing list of notes
-  NewNote: undefined;   // Screen for creating new notes
-  EditNote: { noteId: string };  // Add this
+  NoteList: undefined;
+  NewNote: undefined | {
+    screen?: string;
+    params?: { noteId?: string };
+  };
+  EditNote: { noteId: string };
 };
 
 export type TabParamList = {

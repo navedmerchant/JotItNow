@@ -22,6 +22,13 @@ const database: Database = {
   db: null,
 };
 
+type InitCallback = () => void;
+let initCallbacks: InitCallback[] = [];
+
+export const onDatabaseInitialized = (callback: InitCallback) => {
+  initCallbacks.push(callback);
+};
+
 /**
  * Initializes the SQLite database and creates necessary tables.
  * Called when the application starts.
@@ -58,6 +65,10 @@ export const initDatabase = async () => {
 
     database.db = db;
     console.log('Database initialized');
+    
+    // Call all registered callbacks
+    initCallbacks.forEach(callback => callback());
+    initCallbacks = []; // Clear callbacks after calling them
   } catch (error) {
     console.error('Error initializing database:', error);
   }
