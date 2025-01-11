@@ -10,8 +10,28 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-community/masked-view": "^0.1.11",
+    "@react-native-voice/voice": "^3.2.4",
+    "@react-navigation/material-top-tabs": "^7.1.0",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/native-stack": "^7.2.0",
+    "@reduxjs/toolkit": "^2.5.0",
+    "@types/react-native-sqlite-storage": "^6.0.5",
+    "date-fns": "^4.1.0",
+    "llama.rn": "^0.4.7",
     "react": "18.3.1",
-    "react-native": "0.76.5"
+    "react-native": "0.76.5",
+    "react-native-gesture-handler": "^2.21.2",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-pager-view": "^6.6.1",
+    "react-native-paper": "^5.12.5",
+    "react-native-reanimated": "^3.16.6",
+    "react-native-safe-area-context": "^5.0.0",
+    "react-native-screens": "^4.4.0",
+    "react-native-sqlite-storage": "^6.0.1",
+    "react-redux": "^9.2.0",
+    "uuid": "^11.0.5",
+    "whisper.rn": "0.4.0-rc.10"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -26,6 +46,7 @@
     "@react-native/typescript-config": "0.76.5",
     "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
+    "@types/uuid": "^10.0.0",
     "babel-jest": "^29.6.3",
     "eslint": "^8.19.0",
     "jest": "^29.6.3",

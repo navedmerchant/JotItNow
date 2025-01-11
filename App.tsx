@@ -1,118 +1,83 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
+ * Main application component that sets up navigation and Redux store.
+ * The app uses a stack navigator for main navigation and a tab navigator for the note creation flow.
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { Provider } from 'react-redux';
+import { store } from './store/store';
+import { initDatabase } from './services/database';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// Screen imports
+import NoteListScreen from './screens/NoteListScreen';
+import RecordScreen from './screens/RecordScreen';
+import ChatScreen from './screens/ChatScreen';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+// Type definitions
+export type RootStackParamList = {
+  NoteList: undefined;  // Main screen showing list of notes
+  NewNote: undefined;   // Screen for creating new notes
+};
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+export type TabParamList = {
+  Record: undefined;    // Tab for recording and transcribing audio
+  Chat: undefined;      // Tab for chatting with context
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createMaterialTopTabNavigator<TabParamList>();
+
+/**
+ * Tab navigator component for the note creation flow.
+ * Contains two tabs: Record (for audio recording) and Chat (for conversations).
+ */
+const NewNoteTabNavigator = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <Tab.Navigator>
+      <Tab.Screen 
+        name="Record" 
+        component={RecordScreen}
+        options={{ title: 'Record Note' }}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Tab.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{ title: 'Chat' }}
+      />
+    </Tab.Navigator>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+/**
+ * Root component that initializes the database and sets up the navigation structure.
+ */
+const App = () => {
+  // Initialize SQLite database on app start
+  useEffect(() => {
+    initDatabase();
+  }, []);
+
+  return (
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen 
+            name="NoteList" 
+            component={NoteListScreen}
+            options={{ title: 'My Notes' }}
+          />
+          <Stack.Screen 
+            name="NewNote" 
+            component={NewNoteTabNavigator}
+            options={{ title: 'New Note' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
+  );
+};
 
 export default App;
