@@ -25,11 +25,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     state.chat.messages[noteId] || []
   );
 
-  // Load existing messages when component mounts
-  useEffect(() => {
-    dispatch(fetchChatMessages(noteId));
-  }, [dispatch, noteId]);
-
   const [message, setMessage] = useState('');
 
   // Handle sending new messages

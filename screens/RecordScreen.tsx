@@ -8,7 +8,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { addNoteWithPersistence } from '../store/noteSlice';
+import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
 import { AppDispatch, RootState } from '../store/store';
 import VoiceService from '../services/voice';
 import { v4 as uuidv4 } from 'uuid';
@@ -40,8 +40,17 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     try {
       if (!isRecording) {
         // Generate new note ID when starting recording
-        noteId.current = uuidv4();
-        
+        if (!noteId.current) {
+          console.log('Generating new note ID');
+          noteId.current = uuidv4();
+          dispatch(addNoteWithPersistence({
+            id: noteId.current,
+            title: 'New Recording',
+            content: transcribedText,
+            date: new Date(),
+            summary: summarizedText
+          }));
+        }
         setShowSummarized(false);
         // Start recording
         await voiceService.startListening();
@@ -67,49 +76,66 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
 
   // Add useEffect to save note whenever transcribed text changes
   useEffect(() => {
+    console.log('useEffect[transcribedText, summarizedText] - Saving note', {
+      hasText: !!transcribedText,
+      noteId: noteId.current,
+      summarizedLength: summarizedText.length
+    });
+    
     if (transcribedText && noteId.current) {
-      dispatch(addNoteWithPersistence({
+      dispatch(updateNoteContent ({
         id: noteId.current,
-        title: 'New Recording',
         content: transcribedText,
-        date: new Date(),
         summary: summarizedText
       }));
     }
-  }, [transcribedText, summarizedText, dispatch]);
+  }, [transcribedText, summarizedText]);
 
   // Add useEffect for cleanup
   useEffect(() => {
+    console.log('useEffect[] - Setting up voice service cleanup');
     const voiceService = VoiceService.getInstance();
     
     return () => {
-      console.log('Cleaning up voice service');
+      console.log('Cleanup function called - destroying voice service');
       voiceService.destroy().catch(console.error);
     };
   }, []);
 
   // Add useEffect for setting up the callback
   useEffect(() => {
+    console.log('useEffect[] - Setting up transcription callback');
     const voiceService = VoiceService.getInstance();
     
     voiceService.setOnTranscriptionCallback((results) => {
+      console.log('Transcription callback received results:', {
+        resultsLength: results.length,
+        firstResult: results[0]?.slice(0, 50) // Log first 50 chars
+      });
+      
       if (results.length > 0) {
-        setTranscribedText(results[0]); // Use the first (most confident) result
+        setTranscribedText(results[0]);
       }
     });
   }, []);
 
   // Add useEffect to load note data
   useEffect(() => {
-    const noteId = route?.params?.noteId;
-    if (noteId) {
-      const note = notes.find(n => n.id === noteId);
+    const paramNoteId = route?.params?.noteId;
+    console.log('useEffect[route?.params?.noteId] - Loading note data', {
+      paramNoteId,
+      foundNote: notes.find(n => n.id === paramNoteId)?.id
+    });
+    
+    if (paramNoteId) {
+      const note = notes.find(n => n.id === paramNoteId);
       if (note) {
         setTranscribedText(note.content);
         setSummarizedText(note.summary || '');
       }
+      noteId.current = paramNoteId;
     }
-  }, [route?.params?.noteId, notes]);
+  }, [route?.params?.noteId]);
 
   return (
     <View style={styles.container}>

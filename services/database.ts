@@ -1,20 +1,17 @@
 /**
- * Database service for SQLite operations.
+ * Database service using op-sqlite operations.
  * Handles database initialization and provides access to the database instance.
  */
 
-import SQLite from 'react-native-sqlite-storage';
-
-SQLite.enablePromise(true);
+import { open } from '@op-engineering/op-sqlite';
 
 // Database configuration
-const database_name = 'NotesApp.db';
-const database_version = '1.0';
-const database_displayname = 'Notes App Database';
-const database_size = 200000;
+const DATABASE_NAME = 'NotesApp.db';
 
 interface Database {
-  db: SQLite.SQLiteDatabase | null;
+  db: {
+    execute(sql: string, args?: any[]): Promise<{ rows: any[] }>;
+  } | null;
 }
 
 // Singleton database instance
@@ -35,13 +32,12 @@ export const onDatabaseInitialized = (callback: InitCallback) => {
  */
 export const initDatabase = async () => {
   try {
-    const db = await SQLite.openDatabase({
-      name: database_name,
-      location: 'default',
+    const db = await open({
+      name: DATABASE_NAME,
     });
 
     // Create notes table for storing note data
-    await db.executeSql(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS notes (
         id TEXT PRIMARY KEY,
         title TEXT,
@@ -52,7 +48,7 @@ export const initDatabase = async () => {
     `);
 
     // Create chats table for storing conversation messages
-    await db.executeSql(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS chats (
         id TEXT PRIMARY KEY,
         noteId TEXT,

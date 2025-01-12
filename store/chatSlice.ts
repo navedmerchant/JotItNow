@@ -31,22 +31,25 @@ export const fetchChatMessages = createAsyncThunk(
   'chat/fetchMessages',
   async (noteId: string) => {
     const db = getDatabase();
-    const [results] = await db!.executeSql(
+    if (!db) throw new Error('Database not initialized');
+    
+    console.log(`[DB] Fetching chat messages for noteId: ${noteId}`);
+    
+    const results = await db.execute(
       'SELECT * FROM chats WHERE noteId = ? ORDER BY timestamp ASC',
       [noteId]
     );
     
-    // Convert database rows to ChatMessage objects
-    const messages: ChatMessage[] = [];
-    for (let i = 0; i < results.rows.length; i++) {
-      const row = results.rows.item(i);
-      messages.push({
-        ...row,
-        isUser: Boolean(row.isUser),
-        timestamp: new Date(row.timestamp),
-      });
-    }
+    console.log(`[DB] Found ${results.rows.length} messages for noteId: ${noteId}`);
     
+    // Convert database rows to ChatMessage objects
+    const messages: ChatMessage[] = results.rows.map(row => ({
+      ...row,
+      isUser: Boolean(row.isUser),
+      timestamp: new Date(row.timestamp),
+    }));
+    
+    console.log('[DB] Processed messages:', messages);
     return { noteId, messages };
   }
 );
@@ -55,20 +58,25 @@ export const addChatMessage = createAsyncThunk(
   'chat/addMessage',
   async (message: Omit<ChatMessage, 'id'>) => {
     const db = getDatabase();
+    if (!db) throw new Error('Database not initialized');
+    
     const id = Date.now().toString();
     const newMessage = { ...message, id };
     
-    await db!.executeSql(
+    console.log('[DB] Adding new chat message:', newMessage);
+    
+    await db.execute(
       'INSERT INTO chats (id, noteId, message, isUser, timestamp) VALUES (?, ?, ?, ?, ?)',
       [
-        id,
-        message.noteId,
-        message.message,
+        String(id),
+        String(message.noteId),
+        String(message.message),
         message.isUser ? 1 : 0,
-        message.timestamp.toISOString(),
+        String(message.timestamp.toISOString())
       ]
     );
     
+    console.log('[DB] Successfully added message with id:', id);
     return newMessage;
   }
 );

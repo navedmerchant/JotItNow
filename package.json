@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@op-engineering/op-sqlite": "^11.2.13",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-voice/voice": "^3.2.4",
     "@react-navigation/material-top-tabs": "^7.1.0",
@@ -34,7 +35,9 @@
     "react-native-vector-icons": "^10.2.0",
     "react-redux": "^9.2.0",
     "uuid": "^11.0.5",
-    "whisper.rn": "0.4.0-rc.10"
+    "whisper.rn": "0.4.0-rc.10",
+    "expo": "^52.0.0",
+    "expo-constants": "~17.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
