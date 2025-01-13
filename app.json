@@ -1,4 +1,28 @@
 {
   "name": "JotItNow",
-  "displayName": "JotItNow"
+  "displayName": "JotItNow",
+  "expo": {
+    "plugins": [
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow JotItNow to use the microphone.",
+          "speechRecognitionPermission": "Allow JotItNow to use speech recognition."
+        }
+      ]
+    ],
+    "android": {
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.jotitnow"
+    },
+    "ios": {
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow JotItNow to use speech recognition.",
+        "NSMicrophoneUsageDescription": "Allow JotItNow to use the microphone."
+      },
+      "bundleIdentifier": "com.anonymous.jotitnow"
+    }
+  }
 }

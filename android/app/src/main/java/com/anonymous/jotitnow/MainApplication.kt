@@ -1,4 +1,4 @@
-package com.jotitnow
+package com.anonymous.jotitnow
 import android.content.res.Configuration
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper

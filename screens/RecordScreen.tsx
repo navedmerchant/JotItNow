@@ -4,6 +4,9 @@
  */
 
 import 'react-native-get-random-values';
+import {
+  ExpoSpeechRecognitionModule,
+} from "expo-speech-recognition";
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button } from 'react-native-paper';
@@ -32,11 +35,41 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
   const stopFunctionRef = useRef<StopFunction | null>(null);
   // Inside RecordScreen component, add noteId ref
   const noteId = useRef<string>('');
+  // Add new state for preview text
+  const [previewText, setPreviewText] = useState('');
+
+  const startListener = ExpoSpeechRecognitionModule.addListener("start", () => {setIsRecording(true); setShowSummarized(false);});
+  const endListener = ExpoSpeechRecognitionModule.addListener("end", () => {setIsRecording(false);});
+  const resultListener = ExpoSpeechRecognitionModule.addListener("result", (event) => {
+    if (event.isFinal) {
+      setTranscribedText(transcribedText + event.results[0]?.transcript);
+      setPreviewText(''); // Clear preview when result is final
+    } else {
+      // Show interim results in preview
+      setPreviewText(event.results[0]?.transcript || '');
+    }
+  });
+  const errorListener = ExpoSpeechRecognitionModule.addListener("error", (event) => {
+    console.log("error code:", event.error, "error message:", event.message);
+  });
+
+  useEffect(() => {
+    return () => {
+      startListener.remove();
+      endListener.remove();
+      resultListener.remove();
+      errorListener.remove();
+    };
+  }, []);
 
   // Toggle recording state and handle transcription
   const toggleRecording = async () => {
-    const voiceService = VoiceService.getInstance();
-    
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!result.granted) {
+      console.warn("Permissions not granted", result);
+      return;
+    }
+
     try {
       if (!isRecording) {
         // Generate new note ID when starting recording
@@ -51,14 +84,17 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
             summary: summarizedText
           }));
         }
-        setShowSummarized(false);
-        // Start recording
-        await voiceService.startListening();
-        setIsRecording(true);
+        ExpoSpeechRecognitionModule.start({
+          lang: "en-US",
+          interimResults: true,
+          maxAlternatives: 1,
+          continuous: true,
+          requiresOnDeviceRecognition: true,
+          addsPunctuation: true,
+        });
+        
       } else {
-        // Stop recording
-        await voiceService.stopListening();
-        setIsRecording(false);
+        ExpoSpeechRecognitionModule.stop();
       }
     } catch (error) {
       console.error('Error toggling recording:', error);
@@ -165,6 +201,11 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
         <Text style={styles.text}>
           {showSummarized ? summarizedText : transcribedText}
         </Text>
+        {isRecording && previewText && (
+          <Text style={[styles.text, styles.previewText]}>
+            {previewText}
+          </Text>
+        )}
       </ScrollView>
 
       {/* Bottom controls */}
@@ -212,6 +253,10 @@ const styles = StyleSheet.create({
   },
   recordButton: {
     marginBottom: 16,
+  },
+  previewText: {
+    color: '#666666',
+    fontStyle: 'italic',
   },
 });
 
