@@ -15,12 +15,44 @@ import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
 import { AppDispatch, RootState } from '../store/store';
 import VoiceService from '../services/voice';
 import { v4 as uuidv4 } from 'uuid';
+import { storeEmbedding } from '../services/database';
+import { generateEmbedding, loadVectorContext } from '../services/vector';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
 
 type RecordScreenProps = {
   route?: { params?: { noteId?: string } };
+};
+
+// Add helper function at the top of the file, before the RecordScreen component
+const splitIntoChunks = (text: string, targetLength: number = 300): string[] => {
+  // Split into sentences (accounting for multiple punctuation types)
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  for (const sentence of sentences) {
+    // Count words in current chunk plus new sentence
+    const potentialChunk = currentChunk + sentence;
+    const wordCount = potentialChunk.trim().split(/\s+/).length;
+
+    if (wordCount > targetLength && currentChunk) {
+      // If adding sentence exceeds limit and we have content, start new chunk
+      chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      // Add sentence to current chunk
+      currentChunk += sentence;
+    }
+  }
+
+  // Add remaining text if any
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
 };
 
 const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
@@ -108,6 +140,8 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     console.log('Summarizing text:', transcribedText);
     setSummarizedText(transcribedText);
     setShowSummarized(true);
+    await loadVectorContext();
+    processAndStoreEmbeddings(transcribedText).catch(console.error);
   };
 
   // Add useEffect to save note whenever transcribed text changes
@@ -119,7 +153,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     });
     
     if (transcribedText && noteId.current) {
-      dispatch(updateNoteContent ({
+      dispatch(updateNoteContent({
         id: noteId.current,
         content: transcribedText,
         summary: summarizedText
@@ -172,6 +206,57 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
       noteId.current = paramNoteId;
     }
   }, [route?.params?.noteId]);
+
+  const processAndStoreEmbeddings = async (text: string) => {
+    console.log('Starting processAndStoreEmbeddings', {
+      hasText: !!text,
+      textLength: text.length,
+      noteId: noteId.current
+    });
+
+    if (!text || !noteId.current) {
+      console.warn('Missing required data for embeddings:', {
+        hasText: !!text,
+        hasNoteId: !!noteId.current
+      });
+      return;
+    }
+    
+    // Split text into chunks
+    const chunks = splitIntoChunks(text);
+    console.log('Split text into chunks:', {
+      numberOfChunks: chunks.length,
+      averageChunkLength: chunks.reduce((acc, chunk) => acc + chunk.length, 0) / chunks.length
+    });
+    
+    // Process each chunk
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      console.log(`Processing chunk ${i + 1}/${chunks.length}`, {
+        chunkLength: chunk.length,
+        chunkPreview: chunk.substring(0, 50) + '...'
+      });
+
+      try {
+        const embedding = await generateEmbedding(chunk);
+        if (embedding) {
+          console.log(`Generated embedding for chunk ${i + 1}`, {
+            embeddingLength: embedding.length,
+            firstFewValues: embedding.slice(0, 3)
+          });
+          
+          await storeEmbedding(noteId.current, chunk, embedding);
+          console.log(`Successfully stored embedding for chunk ${i + 1}`);
+        } else {
+          console.warn(`No embedding generated for chunk ${i + 1}`);
+        }
+      } catch (error) {
+        console.error(`Error processing chunk ${i + 1}:`, error);
+      }
+    }
+
+    console.log('Completed processing all chunks');
+  };
 
   return (
     <View style={styles.container}>

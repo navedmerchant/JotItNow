@@ -15,6 +15,7 @@
 		2044C39256A1FF1024BBE5DF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		7699B88040F8A987B510C191 /* libPods-JotItNow-JotItNowTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-JotItNow-JotItNowTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		AF89997A2D380AA0005B80A4 /* bge-small-en-v1.5-q4_k_m.gguf in Resources */ = {isa = PBXBuildFile; fileRef = AF8999792D380AA0005B80A4 /* bge-small-en-v1.5-q4_k_m.gguf */; };
 		BA1333DABA2C492DBCF0D97E /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3264F0077441A69FC77CCA /* noop-file.swift */; };
 		BC2FAF71EB1E8112BB8F65C2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EAFF3976EC822DFEEF3062 /* ExpoModulesProvider.swift */; };
 		BF52EE7C34233063431CA250 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D00D450EBC158758431865A /* ExpoModulesProvider.swift */; };
@@ -52,7 +53,8 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-JotItNow.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JotItNow.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = JotItNow/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-JotItNow-JotItNowTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JotItNow-JotItNowTests.release.xcconfig"; path = "Target Support Files/Pods-JotItNow-JotItNowTests/Pods-JotItNow-JotItNowTests.release.xcconfig"; sourceTree = "<group>"; };
-		AE74BC32E3BE46EB80FDEE86 /* SplashScreen.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = SplashScreen.storyboard; path = JotItNow/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AE74BC32E3BE46EB80FDEE86 /* SplashScreen.storyboard */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = SplashScreen.storyboard; path = JotItNow/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AF8999792D380AA0005B80A4 /* bge-small-en-v1.5-q4_k_m.gguf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "bge-small-en-v1.5-q4_k_m.gguf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -105,6 +107,7 @@
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				5D3264F0077441A69FC77CCA /* noop-file.swift */,
 				0556B2182A2249A3B5A338A9 /* JotItNow-Bridging-Header.h */,
+				AF8999792D380AA0005B80A4 /* bge-small-en-v1.5-q4_k_m.gguf */,
 				AE74BC32E3BE46EB80FDEE86 /* SplashScreen.storyboard */,
 			);
 			name = JotItNow;
@@ -286,6 +289,7 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				2044C39256A1FF1024BBE5DF /* PrivacyInfo.xcprivacy in Resources */,
+				AF89997A2D380AA0005B80A4 /* bge-small-en-v1.5-q4_k_m.gguf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -684,10 +688,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -757,10 +758,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
