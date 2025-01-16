@@ -10,6 +10,7 @@ export const getVectorContext = () => {
 
 export const loadVectorContext = async () => {
     if (vectorContext.llama) {
+        console.log('Vector context already loaded');
         return vectorContext;
     }
     try {
@@ -32,6 +33,7 @@ export const unloadVectorContext = async () => {
     if (vectorContext.llama) {
         await vectorContext.llama.release();
         vectorContext.llama = null;
+        console.log('Vector context unloaded');
     }
 }
 

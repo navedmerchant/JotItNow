@@ -126,9 +126,15 @@ export const storeEmbedding = async (
  * Finds similar chunks using vector similarity search
  */
 export const findSimilarChunks = async (
-  embedding: number[],
+  embedding: number[] | null,
   limit: number = 5
 ): Promise<Array<{ noteId: string; chunk: string; distance: number }>> => {
+  
+  if (!embedding) {
+    console.error('Embedding is null in findSimilarChunks');
+    return [];
+  }
+
   console.log('Finding similar chunks:', {
     embeddingLength: embedding.length,
     limit

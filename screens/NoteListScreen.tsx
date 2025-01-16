@@ -21,9 +21,6 @@ type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
 };
 
-import Constants from 'expo-constants';
-console.log(Constants.systemFonts);
-
 const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   // Get notes from Redux store

@@ -11,7 +11,7 @@ export interface ChatMessage {
   noteId: string;    // References the associated note
   message: string;    // Message content
   isUser: boolean;    // Whether message is from user or AI
-  timestamp: Date;
+  timestamp: string;
 }
 
 interface ChatState {
@@ -46,7 +46,7 @@ export const fetchChatMessages = createAsyncThunk(
     const messages: ChatMessage[] = results.rows.map(row => ({
       ...row,
       isUser: Boolean(row.isUser),
-      timestamp: new Date(row.timestamp),
+      timestamp: new Date(row.timestamp).toISOString(),
     }));
     
     console.log('[DB] Processed messages:', messages);
@@ -72,7 +72,7 @@ export const addChatMessage = createAsyncThunk(
         String(message.noteId),
         String(message.message),
         message.isUser ? 1 : 0,
-        String(message.timestamp.toISOString())
+        message.timestamp
       ]
     );
     
