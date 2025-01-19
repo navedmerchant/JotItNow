@@ -237,19 +237,24 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
           <Button
             mode="contained"
             onPress={summarizeText}
-            style={styles.summarizeButton}
+            style={[styles.summarizeButton, { backgroundColor: '#007AFF' }]}
+            textColor="#fff"
           >
             Summarize
           </Button>
         )}
         <View style={styles.flex} />
-        <Button
-          mode="text"
-          onPress={() => setShowSummarized(!showSummarized)}
-          disabled={!summarizedText}
-        >
-          {showSummarized ? 'Summary' : 'Transcript'}
-        </Button>
+        {transcribedText && (  // Only show toggle when there's text
+          <Button
+            mode="contained"  // Changed from mode="text"
+            onPress={() => setShowSummarized(!showSummarized)}
+            disabled={!summarizedText}
+            style={{ backgroundColor: '#007AFF' }}  // Added style
+            textColor="#fff"
+          >
+            {showSummarized ? 'Show Transcript' : 'Show Summary'}
+          </Button>
+        )}
       </View>
 
       {/* Rest of the content */}
@@ -269,7 +274,10 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
         <Button
           mode="contained"
           onPress={toggleRecording}
-          style={styles.recordButton}
+          style={[styles.recordButton, { 
+            backgroundColor: isRecording ? '#c20a10' : '#007AFF'
+          }]}
+          textColor="#fff"
         >
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </Button>
@@ -282,17 +290,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#1c1c1c',
   },
   header: {
     flexDirection: 'row',
     marginBottom: 16,
+    backgroundColor: '#1c1c1c',
   },
   flex: {
     flex: 1,
   },
   textContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#2c2c2c',
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
@@ -300,6 +310,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     lineHeight: 24,
+    color: '#fff',
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -311,7 +322,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   previewText: {
-    color: '#666666',
+    color: '#999999',
     fontStyle: 'italic',
   },
 });

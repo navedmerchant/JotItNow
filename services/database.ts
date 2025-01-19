@@ -156,9 +156,8 @@ export const findSimilarChunks = async (
       `SELECT noteId, chunk, distance
        FROM embeddings
        WHERE embedding MATCH ?
-       AND noteId = ?
        AND k = ?`,
-      [embeddingJson, noteId, limit]
+      [embeddingJson, limit]
     );
 
     console.log('Search results:', {

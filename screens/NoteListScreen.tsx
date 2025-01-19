@@ -42,9 +42,7 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
       ) {
         console.log('App has come to the foreground!');
         loadVectorContext();
-        console.log('Vector context loaded');
         loadLlamaContext();
-        console.log('Llama context loaded');
       } else if (
         appState.current === 'active' &&
         nextAppState.match(/inactive|background/)
@@ -72,9 +70,7 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
     console.log('useEffect: Fetching notes');
     dispatch(fetchNotes());
     loadVectorContext();
-    console.log('Vector context loaded');
     loadLlamaContext();
-    console.log('Llama context loaded');
   }, []);
 
   useLayoutEffect(() => {
@@ -84,9 +80,16 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
           onPress={() => navigation.navigate('NewNote')}
           style={{ marginRight: 16 }}
         >
-          <Plus size={24} color="#000" />
+          <Plus size={24} color="#fff" />
         </TouchableOpacity>
       ),
+      headerStyle: {
+        backgroundColor: '#1c1c1c',
+      },
+      headerTitleStyle: {
+        color: '#fff',
+      },
+      headerTintColor: '#fff',
     });
   }, [navigation]);
 
@@ -112,6 +115,8 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
           />
         )}
         keyExtractor={(item) => item.id || uuidv4()}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
@@ -120,6 +125,14 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1c1c1c',
+  },
+  list: {
+    flex: 1,
+    backgroundColor: '#1c1c1c',
+  },
+  listContent: {
+    paddingVertical: 8,
   },
 });
 

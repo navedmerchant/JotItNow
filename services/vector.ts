@@ -33,7 +33,6 @@ export const unloadVectorContext = async () => {
     if (vectorContext.llama != null) {
         await vectorContext.llama.release();
         vectorContext.llama = null;
-        console.log('Vector context unloaded');
     }
 }
 

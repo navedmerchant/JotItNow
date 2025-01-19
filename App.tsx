@@ -41,7 +41,22 @@ const Tab = createMaterialTopTabNavigator<TabParamList>();
  */
 const NewNoteTabNavigator = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: '#1c1c1c',
+        },
+        tabBarIndicatorStyle: {
+          backgroundColor: '#007AFF',
+        },
+        tabBarActiveTintColor: '#fff',
+        tabBarInactiveTintColor: '#999',
+        tabBarLabelStyle: {
+          fontSize: 14,
+          textTransform: 'none',
+        },
+      }}
+    >
       <Tab.Screen 
         name="Record" 
         component={RecordScreen}
@@ -68,9 +83,22 @@ const App = () => {
   return (
     <Provider store={store}>
       <MenuProvider customStyles={menuProviderStyles}>
-          <NavigationContainer>
-            <Stack.Navigator>
-              <Stack.Screen 
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#1c1c1c',
+              },
+              headerTitleStyle: {
+                color: '#fff',
+              },
+              headerTintColor: '#fff',
+              contentStyle: {
+                backgroundColor: '#1c1c1c',
+              },
+            }}
+          >
+            <Stack.Screen 
               name="NoteList" 
               component={NoteListScreen}
               options={{ title: 'My Notes' }}

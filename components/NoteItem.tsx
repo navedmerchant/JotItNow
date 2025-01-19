@@ -37,7 +37,7 @@ const NoteItem: React.FC<NoteItemProps> = ({ note, onPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2c2c2c',
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 8,
@@ -45,22 +45,23 @@ const styles = StyleSheet.create({
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
   },
   date: {
     fontSize: 12,
-    color: '#666',
+    color: '#999',
     marginBottom: 4,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 8,
   },
   preview: {
     fontSize: 14,
-    color: '#444',
+    color: '#ccc',
   },
 });
 

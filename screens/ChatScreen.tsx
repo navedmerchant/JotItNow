@@ -227,7 +227,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
     <KeyboardAvoidingView 
       style={styles.container} 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 115 : 0} 
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 125 : 0} 
     >
       <ScrollView 
         ref={scrollViewRef}
