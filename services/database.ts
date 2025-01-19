@@ -165,11 +165,19 @@ export const findSimilarChunks = async (
       firstResultDistance: rows[0]?.distance
     });
 
-    return rows.map(row => ({
+    // Filter out matches from the same note
+    const filteredRows = rows.filter(row => row.noteId !== noteId);
+    console.log('Filtered results:', {
+      originalCount: rows.length,
+      filteredCount: filteredRows.length
+    });
+
+    return filteredRows.map(row => ({
       noteId: row.noteId,
       chunk: row.chunk,
       distance: row.distance
     }));
+    
   } catch (error) {
     console.error('Error finding similar chunks:', error);
     return [];
@@ -201,4 +209,28 @@ export const deleteNoteEmbeddings = async (noteId: string) => {
     });
     throw error;
   }
-}; 
+};
+
+export async function hasAnyChunks(noteId: string): Promise<boolean> {
+  try {
+    const db = getDatabase();
+    if (!db) {
+      console.error('Database not initialized in hasAnyChunks');
+      return false;
+    }
+
+    let query = 'SELECT COUNT(*) as count FROM embeddings';
+    const params: any[] = [];
+    
+    if (noteId) {
+      query += ' WHERE noteId = ?';
+      params.push(noteId);
+    }
+    
+    const { rows } = await db.execute(query, params);
+    return rows[0]?.count > 0;
+  } catch (error) {
+    console.error('Error checking for chunks:', error);
+    return false;
+  }
+} 

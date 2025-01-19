@@ -200,6 +200,24 @@ const styles = StyleSheet.create({
       color: '#fff',
       textAlign: 'center'
     },
+    noContentContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    noContentText: {
+      textAlign: 'center',
+      color: '#666',
+      fontSize: 16,
+    },
+    inputDisabled: {
+      backgroundColor: '#f0f0f0',
+      color: '#999',
+    },
+    sendButtonDisabled: {
+      backgroundColor: '#ccc',
+    },
   });
   
   const markdownStyles = {

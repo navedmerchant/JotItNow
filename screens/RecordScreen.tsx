@@ -14,9 +14,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { v4 as uuidv4 } from 'uuid';
-import { storeEmbedding } from '../services/database';
-import { generateEmbedding, loadVectorContext } from '../services/vector';
+import { deleteNoteEmbeddings, storeEmbedding } from '../services/database';
+import { generateEmbedding } from '../services/vector';
 import { getLlamaContext } from '../services/llama';
+import Markdown from 'react-native-markdown-display';
+import { markdownStyles } from './Styles';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
@@ -69,6 +71,8 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
   const noteId = useRef<string>('');
   // Add new state for preview text
   const [previewText, setPreviewText] = useState('');
+  // Add new state near other state declarations
+  const [isTextSummarized, setIsTextSummarized] = useState(false);
 
   const startListener = ExpoSpeechRecognitionModule.addListener("start", () => {setIsRecording(true); setShowSummarized(false);});
   const endListener = ExpoSpeechRecognitionModule.addListener("end", () => {setIsRecording(false);});
@@ -134,32 +138,50 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     }
   };
 
-  // Update the summarizeText function
+  // Update the summarizeText function to delete old embeddings first
   const summarizeText = async () => {
     console.log('Summarizing text:', transcribedText);
     setShowSummarized(true);
+    setIsTextSummarized(true);
     const llamaContext = getLlamaContext();
     if (!llamaContext || !llamaContext.llama) {
       console.error('Llama context not found');
       return;
     }
 
-    const systemPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-    You are an advanced AI designed to summarize transcripts with precision and clarity. Your tasks are:
-    1. Create a concise but detailed summary that captures all critical information
-    2. Extract and list any action items, including who is responsible and deadlines if mentioned
-    3. Maintain the original intent while being clear and concise
-    4. Format the output in markdown with clear sections
-    <|eot_id|>`;
-
-    const userPrompt = `<|start_header_id|>user<|end_header_id|>
-    Please summarize this transcript:
-    ${transcribedText}
-    <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
-
-    const fullPrompt = systemPrompt + userPrompt;
-
     try {
+      // Delete existing embeddings before generating new ones
+      if (noteId.current) {
+        console.log('Deleting existing embeddings for note:', noteId.current);
+        await deleteNoteEmbeddings(noteId.current);
+      }
+
+      const systemPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      You are an advanced AI designed to summarize transcripts with precision and clarity. Your tasks are:
+      1. Create a concise but detailed summary that captures all critical information
+      2. Extract and list any action items, including who is responsible and deadlines if mentioned
+      3. Maintain the original intent while being clear and concise
+      4. Format the output in markdown with clear sections using # for main headings and ## for subheadings
+      5. Use bullet points (•) for lists and emphasis (*) for important points
+      <|eot_id|>`;
+
+      const userPrompt = `<|start_header_id|>user<|end_header_id|>
+      Please summarize this transcript and format it in markdown with the following sections:
+      # Summary
+      [Main summary here]
+      
+      ## Key Points
+      • [Key points as bullet list]
+      
+      ## Action Items
+      • [Action items if any]
+      
+      Transcript to summarize:
+      ${transcribedText}
+      <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+
+      const fullPrompt = systemPrompt + userPrompt;
+
       let summary = '';
       const result = await llamaContext.llama.completion(
         {
@@ -182,10 +204,50 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
 
       const finalSummary = result.text.replace("<|eot_id|>", "");
       setSummarizedText(finalSummary);
+      
+      // Generate title after summary
+      const titlePrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      Generate a short, descriptive title (3-6 words) for this note based on its summary.
+      <|eot_id|><|start_header_id|>user<|end_header_id|>
+      Summary:
+      ${finalSummary}
+      <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+
+      let generatedTitle = '';
+      const titleResult = await llamaContext.llama.completion(
+        {
+          prompt: titlePrompt,
+          n_predict: 50,
+          temperature: 0.7,
+        },
+        (data) => {
+          if (data.token === "<|eot_id|>") {
+            return;
+          }
+          generatedTitle += data.token;
+        }
+      );
+
+      if (titleResult) {
+        const cleanTitle = titleResult.text
+          .replace("<|eot_id|>", "")
+          .trim()
+          .replace(/["']/g, ''); // Remove quotes if present
+        
+        // Update note with new title and summary
+        dispatch(updateNoteContent({
+          id: noteId.current,
+          content: transcribedText,
+          summary: finalSummary,
+          title: cleanTitle
+        }));
+      }
+      
+      // Process and store new embeddings after successful summarization
       await processAndStoreEmbeddings(transcribedText);
 
     } catch (error) {
-      console.error('Error generating summary:', error);
+      console.error('Error in summarization process:', error);
       setSummarizedText('Sorry, I encountered an error while summarizing. Please try again.');
     }
   };
@@ -224,6 +286,13 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
       noteId.current = paramNoteId;
     }
   }, [route?.params?.noteId]);
+
+  // Add effect to reset isTextSummarized when transcribedText changes
+  useEffect(() => {
+    if (transcribedText) {
+      setIsTextSummarized(false);
+    }
+  }, [transcribedText]);
 
   const processAndStoreEmbeddings = async (text: string) => {
     console.log('Starting processAndStoreEmbeddings', {
@@ -284,8 +353,12 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
           <Button
             mode="contained"
             onPress={summarizeText}
-            style={[styles.summarizeButton, { backgroundColor: '#007AFF' }]}
+            style={[
+              styles.summarizeButton, 
+              { backgroundColor: isTextSummarized ? '#666666' : '#007AFF' }
+            ]}
             textColor="#fff"
+            disabled={isTextSummarized}
           >
             Summarize
           </Button>
@@ -306,9 +379,15 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
 
       {/* Rest of the content */}
       <ScrollView style={styles.textContainer}>
-        <Text style={styles.text}>
-          {showSummarized ? summarizedText : transcribedText}
-        </Text>
+        {showSummarized ? (
+          <Markdown style={markdownStyles}>
+            {summarizedText}
+          </Markdown>
+        ) : (
+          <Text style={styles.text}>
+            {transcribedText}
+          </Text>
+        )}
         {isRecording && previewText && (
           <Text style={[styles.text, styles.previewText]}>
             {previewText}

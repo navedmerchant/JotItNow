@@ -116,20 +116,26 @@ export const addNoteWithPersistence = createAsyncThunk(
 
 // Async thunk for updating note content
 export const updateNoteContent = createAsyncThunk(
-  'notes/updateContent',
-  async ({ id, content, summary }: { id: string; content: string; summary?: string }) => {
+  'notes/updateNoteContent',
+  async (payload: { 
+    id: string; 
+    content: string; 
+    summary?: string;
+    title?: string;  // Add title as optional parameter
+  }) => {
     const db = getDatabase();
     if (!db) throw new Error('Database not initialized');
-    
-    console.log('[DB] Updating note content:', { id, content, summary });
-    
+
     await db.execute(
-      'UPDATE notes SET content = ?, summary = ? WHERE id = ?',
-      [String(content), String(summary || ''), String(id)]
+      `UPDATE notes 
+       SET content = ?, 
+           summary = COALESCE(?, summary),
+           title = COALESCE(?, title)
+       WHERE id = ?`,
+      [payload.content, payload.summary, payload.title, payload.id]
     );
-    
-    console.log('[DB] Successfully updated note:', id);
-    return { id, content, summary };
+
+    return payload;
   }
 );
 
@@ -158,7 +164,13 @@ export const noteSlice = createSlice({
       .addCase(updateNoteContent.fulfilled, (state, action) => {
         const index = state.notes.findIndex(note => note.id === action.payload.id);
         if (index !== -1) {
-          state.notes[index] = { ...state.notes[index], ...action.payload };
+          state.notes[index].content = action.payload.content;
+          if (action.payload.summary) {
+            state.notes[index].summary = action.payload.summary;
+          }
+          if (action.payload.title) {
+            state.notes[index].title = action.payload.title;
+          }
         }
       });
   },

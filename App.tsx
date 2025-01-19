@@ -10,6 +10,9 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 import { initDatabase } from './services/database';
+import { useSelector } from 'react-redux';
+import { RootState } from './store/store';
+import { useRoute, RouteProp } from '@react-navigation/native';
 
 // Screen imports
 import NoteListScreen from './screens/NoteListScreen';
@@ -40,6 +43,12 @@ const Tab = createMaterialTopTabNavigator<TabParamList>();
  * Contains two tabs: Record (for audio recording) and Chat (for conversations).
  */
 const NewNoteTabNavigator = () => {
+  // Get the current note from Redux store
+  const notes = useSelector((state: RootState) => state.notes.notes);
+  const route = useRoute<RouteProp<RootStackParamList, 'NewNote'>>();
+  const noteId = route.params?.params?.noteId;
+  const currentNote = notes.find(note => note.id === noteId);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -60,12 +69,18 @@ const NewNoteTabNavigator = () => {
       <Tab.Screen 
         name="Record" 
         component={RecordScreen}
-        options={{ title: 'Record Note' }}
+        options={{ 
+          title: currentNote?.title || 'Record Note',
+          tabBarLabel: 'Record'
+        }}
       />
       <Tab.Screen 
         name="Chat" 
         component={ChatScreen}
-        options={{ title: 'Chat' }}
+        options={{ 
+          title: currentNote?.title || 'Chat',
+          tabBarLabel: 'Chat'
+        }}
       />
     </Tab.Navigator>
   );
