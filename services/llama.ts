@@ -9,7 +9,7 @@ export const getLlamaContext = () => {
 }
 
 export const loadLlamaContext = async () => {
-    if (llamaContext.llama) {
+    if (llamaContext.llama != null) {
         return llamaContext;
     }
     try {
@@ -18,7 +18,7 @@ export const loadLlamaContext = async () => {
             is_model_asset: true,
             n_ctx: 4096,  
             n_gpu_layers: 48
-        })
+        });
         console.log('Llama context loaded');
         return llamaContext;
     } catch (error) {
@@ -28,7 +28,7 @@ export const loadLlamaContext = async () => {
 }
 
 export const unloadLlamaContext = async () => {
-    if (llamaContext.llama) {
+    if (llamaContext.llama != null) {
         await llamaContext.llama.release();
         llamaContext.llama = null;
     }

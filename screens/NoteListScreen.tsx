@@ -16,6 +16,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Plus } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { onDatabaseInitialized } from '../services/database';
+import { setContextLimit } from 'llama.rn';
+import { loadLlamaContext, unloadLlamaContext } from '../services/llama';
+import { loadVectorContext, unloadVectorContext } from '../services/vector';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -27,6 +30,8 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
   const notes = useSelector((state: RootState) => state.notes.notes);
   const loading = useSelector((state: RootState) => state.notes.loading);
 
+  setContextLimit(5);
+
   const appState = useRef(AppState.currentState);
 
   useEffect(() => {
@@ -36,12 +41,19 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
         nextAppState === 'active'
       ) {
         console.log('App has come to the foreground!');
+        loadVectorContext();
+        console.log('Vector context loaded');
+        loadLlamaContext();
+        console.log('Llama context loaded');
       } else if (
         appState.current === 'active' &&
         nextAppState.match(/inactive|background/)
       ) {
         console.log('App has gone to the background!');
-        // unloadWhisperContext();
+        unloadLlamaContext();
+        console.log('Llama context unloaded');
+        unloadVectorContext();
+        console.log('Vector context unloaded');
       }
 
       appState.current = nextAppState;
@@ -59,6 +71,10 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
   useEffect(() => {
     console.log('useEffect: Fetching notes');
     dispatch(fetchNotes());
+    loadVectorContext();
+    console.log('Vector context loaded');
+    loadLlamaContext();
+    console.log('Llama context loaded');
   }, []);
 
   useLayoutEffect(() => {

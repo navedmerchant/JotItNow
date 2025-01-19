@@ -74,7 +74,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
   const endListener = ExpoSpeechRecognitionModule.addListener("end", () => {setIsRecording(false);});
   const resultListener = ExpoSpeechRecognitionModule.addListener("result", (event) => {
     if (event.isFinal) {
-      setTranscribedText(transcribedText + event.results[0]?.transcript);
+      setTranscribedText(transcribedText + (event.results[0]?.transcript || ''));
       setPreviewText(''); // Clear preview when result is final
     } else {
       // Show interim results in preview
@@ -140,7 +140,6 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     console.log('Summarizing text:', transcribedText);
     setSummarizedText(transcribedText);
     setShowSummarized(true);
-    await loadVectorContext();
     processAndStoreEmbeddings(transcribedText).catch(console.error);
   };
 
@@ -160,34 +159,6 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
       }));
     }
   }, [transcribedText, summarizedText]);
-
-  // Add useEffect for cleanup
-  useEffect(() => {
-    console.log('useEffect[] - Setting up voice service cleanup');
-    const voiceService = VoiceService.getInstance();
-    
-    return () => {
-      console.log('Cleanup function called - destroying voice service');
-      voiceService.destroy().catch(console.error);
-    };
-  }, []);
-
-  // Add useEffect for setting up the callback
-  useEffect(() => {
-    console.log('useEffect[] - Setting up transcription callback');
-    const voiceService = VoiceService.getInstance();
-    
-    voiceService.setOnTranscriptionCallback((results) => {
-      console.log('Transcription callback received results:', {
-        resultsLength: results.length,
-        firstResult: results[0]?.slice(0, 50) // Log first 50 chars
-      });
-      
-      if (results.length > 0) {
-        setTranscribedText(results[0]);
-      }
-    });
-  }, []);
 
   // Add useEffect to load note data
   useEffect(() => {

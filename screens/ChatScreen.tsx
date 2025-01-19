@@ -3,29 +3,86 @@
  * Allows users to chat with context from the notes using llama.rn.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import ChatMessage from '../components/ChatMessage';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchChatMessages, addChatMessage } from '../store/chatSlice';
-import { AppDispatch, RootState } from '../store/store';
-import { loadLlamaContext } from '../services/llama';
-import { generateEmbedding, loadVectorContext, unloadVectorContext } from '../services/vector';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, TextInput, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Clipboard, EmitterSubscription, Keyboard, GestureResponderEvent, NativeScrollEvent, NativeSyntheticEvent, Text } from 'react-native';
+import { getLlamaContext } from '../services/llama';
+import { generateEmbedding } from '../services/vector';
 import { findSimilarChunks } from '../services/database';
+import { Send } from 'lucide-react-native';
+import { markdownStyles, menuOptionStyles, popoverStyles, styles } from './Styles';
+import { Square } from 'lucide-react-native';
+import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
+import Markdown from 'react-native-markdown-display';
+import { MenuOption } from 'react-native-popup-menu';
+import Toast from 'react-native-simple-toast';
 
 type ChatScreenProps = {
   route?: { params?: { noteId?: string } };  // Optional route params for noteId
 };
 
-const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
-  // Generate new noteId if not provided through navigation
-  const noteId = route?.params?.noteId || Date.now().toString();
-  const dispatch = useDispatch<AppDispatch>();
-  const chatContext = useRef('');
+interface Message {
+  id: number;
+  text: string;
+  isUser: boolean;
+}
 
+const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentResponse, setCurrentResponse] = useState('');
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  const chatContext = useRef('');
+  const scrollViewRef = useRef<ScrollView>(null);
+  const textInputRef = useRef<TextInput>(null);
   const systemPrompt = useRef('');
-  systemPrompt.current =  `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+  
+
+  useEffect(() => {
+    let keyboardDidShowListener: EmitterSubscription;
+    let keyboardDidHideListener: EmitterSubscription;
+
+    if (Platform.OS === 'ios') {
+      keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', scrollToBottom);
+      keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', scrollToBottom);
+    }
+
+    return () => {
+      if (Platform.OS === 'ios') {
+        keyboardDidShowListener.remove();
+        keyboardDidHideListener.remove();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isAutoScrolling) {
+      scrollToBottom();
+    }
+  }, [contentHeight])
+
+  const scrollToBottom = () => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  };
+
+  const addMessage = useCallback((text: string, isUser: boolean) => {
+    setMessages(prevMessages => [
+      ...prevMessages,
+      { id: Date.now(), text, isUser }
+    ]);
+    setTimeout(scrollToBottom, 100);
+  }, []);
+
+
+  const handleSend = useCallback(async () => {
+    if (inputText.trim()) {
+      addMessage(inputText, true);
+      setInputText('');
+      setIsTyping(true);
+
+      systemPrompt.current =  `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
       You are a note taking AI assistant. You are given the relevant context of the note.
       The context will be provided in <context> tags. Answer the user's question based on the context.
       If the user's question is not related to the context, say so.
@@ -35,178 +92,181 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       If the user's question is a request for help, provide help.
       If the user's question is a request for a task to be completed, complete the task.
       <|eot_id|>`;
+
+      const embedding = await generateEmbedding(inputText);
+      const noteId = route?.params?.noteId || ''; // Default fallback
+      const similarChunks = await findSimilarChunks(embedding, noteId);
+      console.log('similarChunks', similarChunks);
+      console.log('[Chat] Found similar chunks:', similarChunks.length);
+
+      // Build context from similar chunks
+      const contextText = similarChunks
+      .map(chunk => chunk.chunk)
+      .join('\n\n');
   
-  // Get messages for this note from Redux store
-  const messages = useSelector((state: RootState) => 
-    state.chat.messages[noteId] || []
+      let contextPrompt;
+      // Add context to prompt if we have similar chunks
+      if (contextText) {
+        contextPrompt = `<context>
+        ${contextText}
+        </context>`;
+      } else {
+        contextPrompt = '<context></context>';
+      }
+
+      const firstPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      ${systemPrompt.current}<|eot_id|><|start_header_id|>user<|end_header_id|> 
+      ${contextPrompt}${inputText}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
+
+      const otherPrompts = `<|start_header_id|>user<|end_header_id|> 
+      ${contextPrompt}${inputText}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
+
+      let prompt;
+      if (messages.length == 0) {
+        prompt = firstPrompt;
+      } else {
+        prompt = otherPrompts;
+      }
+
+      chatContext.current = chatContext.current + prompt;
+
+      if (!getLlamaContext().llama) {
+        console.log("context is undefined!")
+        return;
+      }
+
+      try {
+        // Do completion
+        const result = await getLlamaContext().llama?.completion(
+          {
+            prompt: chatContext.current,
+            n_predict: 1024,
+            temperature: 0.7,
+          },
+          (data) => {
+            if  (data.token == "<|eot_id|>") {
+                return;
+            }
+            setCurrentResponse(prev => prev + data.token);
+          },
+        )
+        
+        if (!result) {
+          throw new Error('Completion failed');
+        }
+        
+        const { text, timings } = result;
+        chatContext.current = chatContext.current + text;
+        const displayText = text.replace("<|eot_id|>", "")
+        addMessage(displayText, false);
+      } catch (error) {
+        console.error('Error generating AI response:', error);
+        addMessage('Sorry, I encountered an error. Please try again.', false);
+      } finally {
+        setIsTyping(false);
+        setCurrentResponse('');
+      }
+    }
+  }, [inputText, addMessage]);
+
+  function handleStop(event: GestureResponderEvent): void {
+    getLlamaContext().llama?.stopCompletion();
+    setIsTyping(false);
+  }
+
+  const isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize} : NativeScrollEvent) => {
+    const paddingToBottom = 20;
+    return layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom;
+  };
+
+  function handleScrollEvent(event: NativeSyntheticEvent<NativeScrollEvent>): void {
+    const bottom = isCloseToBottom(event.nativeEvent);
+    setIsAutoScrolling(bottom);
+  }
+
+  function handleContentSizeChange(w: number, h: number): void {
+    setContentHeight(h);
+  }
+
+  const handleCopyText = (text: string) => {
+    Clipboard.setString(text);
+    Toast.show("Text copied to Clipboard", Toast.SHORT);
+  };
+
+  // ... (previous useEffect hooks and functions remain the same)
+
+  const renderMessage = (message: Message) => (
+    <Menu key={message.id}>
+      <MenuTrigger
+        triggerOnLongPress
+        customStyles={{
+          triggerTouchable: {
+            underlayColor: 'transparent',
+            activeOpacity: 0.6,
+          },
+        }}
+      >
+        <View
+          style={[
+            styles.messageBubble,
+            message.isUser ? styles.userMessage : styles.aiMessage
+          ]}
+        >
+          <Markdown style={markdownStyles}>{message.text}</Markdown>
+        </View>
+      </MenuTrigger>
+      <MenuOptions customStyles={popoverStyles(message.isUser)}>
+        <MenuOption onSelect={() => handleCopyText(message.text)} text="Copy" customStyles={menuOptionStyles}/>
+      </MenuOptions>
+    </Menu>
   );
 
-  const [message, setMessage] = useState('');
-  const [currentResponse, setCurrentResponse] = useState('');
-
-  // Handle sending new messages
-  const sendMessage = async () => {
-    if (!message.trim()) return;
-    console.log('[Chat] Starting to send message:', message.trim());
-    setMessage('');
-
-    await loadVectorContext();
-    const embedding = await generateEmbedding(message);
-    const similarChunks = await findSimilarChunks(embedding);
-    console.log('similarChunks', similarChunks);
-    console.log('[Chat] Found similar chunks:', similarChunks.length);
-    
-    await unloadVectorContext();
-
-    const userMessage = {
-      noteId,
-      message: message.trim(),
-      isUser: true,
-      timestamp: new Date().toISOString(),
-    };
-    console.log('[Chat] Dispatching user message:', userMessage);
-    await dispatch(addChatMessage(userMessage));
-
-    const llamaContext = await loadLlamaContext();
-    if (!llamaContext || !llamaContext.llama) {
-      console.error('[Chat] Failed to load llama context');
-      return;
-    } 
-
-    const firstPrompt = `${systemPrompt.current}<|start_header_id|>user<|end_header_id|> 
-    ${message}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
-
-    const otherPrompts = `<|start_header_id|>user<|end_header_id|> 
-    ${message}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
-
-    let prompt;
-    if (messages.length == 0) {
-      prompt = firstPrompt;
-    } else {
-      prompt = otherPrompts;
-    }
-
-    chatContext.current = chatContext.current + prompt;
-    console.log('chatContext.current', chatContext.current);
-    // Start streaming response
-    try {
-      console.log('[Chat] Starting llama completion');
-      const { text, timings } = await llamaContext.llama.completion(
-        {
-          prompt: chatContext.current,
-          n_predict: 1024,
-          temperature: 0.7,
-        },
-        (data: any) => {
-          if  (data.token == "<|eot_id|>") {
-              return;
-          }
-          setCurrentResponse(prev => prev + data.token);
-        },
-      )
-
-      chatContext.current = chatContext.current + text;
-
-      const aiMessage = {
-        noteId,
-        message: currentResponse,
-        isUser: false,
-        timestamp: new Date().toISOString(),
-      };
-      console.log('[Chat] Dispatching AI response:', aiMessage);
-      await dispatch(addChatMessage(aiMessage));
-
-      // Clear the current response and input
-      setCurrentResponse('');
-      
-    } catch (error) {
-      console.error('[Chat] Error in completion:', error);
-    }
-  };
 
   return (
     <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      style={styles.container} 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 115 : 0} 
     >
-      <FlatList
-        data={messages}
-        renderItem={({ item }) => <ChatMessage message={item} />}
-        keyExtractor={item => item.id}
-        style={styles.messageList}
-      />
-      {currentResponse && (
-        <View style={styles.currentResponseContainer}>
-          <Text style={styles.currentResponseText}>
-            {currentResponse}
-          </Text>
-        </View>
-      )}
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.scrollViewContent}
+        onScroll={handleScrollEvent}
+        onContentSizeChange={handleContentSizeChange}
+        scrollEventThrottle={16} 
+      >
+        {messages.map(renderMessage)}
+        {isTyping && (
+          <View style={[styles.messageBubble, styles.aiMessage]}>
+            <Text style={styles.aiMessageText}> {currentResponse}</Text>
+          </View>
+        )}
+      </ScrollView>
       <View style={styles.inputContainer}>
         <TextInput
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Type your message..."
           style={styles.input}
-          mode="outlined"
-          outlineColor="#e0e0e0"
-          activeOutlineColor="#6200ee"
-          dense
-          multiline
-          outlineStyle={{ borderRadius: 20 }}
-         />
-        <Button 
-          mode="contained" 
-          onPress={sendMessage}
-          style={styles.sendButton}
-          contentStyle={{ borderRadius: 20 }}
-        >
-          Send
-        </Button>
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder={"Ask me anything about the current note"}
+          placeholderTextColor="#999"
+          ref={textInputRef}
+          multiline={true}
+          numberOfLines={2}
+        />
+        {
+        (isTyping ? 
+        (<TouchableOpacity style={styles.stopButton} onPress={handleStop}>
+          <Square color="#fff"></Square>
+        </TouchableOpacity>) : 
+        (<TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+          <Send color="#fff"></Send>
+        </TouchableOpacity>))
+        }
       </View>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  messageList: {
-    flex: 1,
-    padding: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    paddingBottom: 60,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  input: {
-    flex: 1,
-    marginRight: 8,
-    backgroundColor: '#fff',
-    fontSize: 16,
-    borderRadius: 20,
-  },
-  sendButton: {
-    borderRadius: 20,
-  },
-  currentResponseContainer: {
-    padding: 12,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 12,
-  },
-  currentResponseText: {
-    fontSize: 16,
-    color: '#333',
-  },
-});
 
 export default ChatScreen; 

@@ -15,6 +15,7 @@ import { initDatabase } from './services/database';
 import NoteListScreen from './screens/NoteListScreen';
 import RecordScreen from './screens/RecordScreen';
 import ChatScreen from './screens/ChatScreen';
+import { MenuProvider } from 'react-native-popup-menu';
 
 // Type definitions
 export type RootStackParamList = {
@@ -66,22 +67,31 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen 
-            name="NoteList" 
-            component={NoteListScreen}
-            options={{ title: 'My Notes' }}
-          />
-          <Stack.Screen 
-            name="NewNote" 
-            component={NewNoteTabNavigator}
-            options={{ title: 'New Note' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <MenuProvider customStyles={menuProviderStyles}>
+          <NavigationContainer>
+            <Stack.Navigator>
+              <Stack.Screen 
+              name="NoteList" 
+              component={NoteListScreen}
+              options={{ title: 'My Notes' }}
+            />
+            <Stack.Screen 
+              name="NewNote" 
+              component={NewNoteTabNavigator}
+              options={{ title: 'New Note' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </MenuProvider>
     </Provider>
   );
+};
+
+const menuProviderStyles = {
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    opacity: 1,
+  },
 };
 
 export default App;

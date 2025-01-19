@@ -127,6 +127,7 @@ export const storeEmbedding = async (
  */
 export const findSimilarChunks = async (
   embedding: number[] | null,
+  noteId: string,
   limit: number = 5
 ): Promise<Array<{ noteId: string; chunk: string; distance: number }>> => {
   
@@ -137,6 +138,7 @@ export const findSimilarChunks = async (
 
   console.log('Finding similar chunks:', {
     embeddingLength: embedding.length,
+    noteId,
     limit
   });
 
@@ -154,8 +156,9 @@ export const findSimilarChunks = async (
       `SELECT noteId, chunk, distance
        FROM embeddings
        WHERE embedding MATCH ?
+       AND noteId = ?
        AND k = ?`,
-      [embeddingJson, limit]
+      [embeddingJson, noteId, limit]
     );
 
     console.log('Search results:', {

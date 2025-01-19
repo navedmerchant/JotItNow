@@ -9,7 +9,7 @@ export const getVectorContext = () => {
 }
 
 export const loadVectorContext = async () => {
-    if (vectorContext.llama) {
+    if (vectorContext.llama != null) {
         console.log('Vector context already loaded');
         return vectorContext;
     }
@@ -30,7 +30,7 @@ export const loadVectorContext = async () => {
 }
 
 export const unloadVectorContext = async () => {
-    if (vectorContext.llama) {
+    if (vectorContext.llama != null) {
         await vectorContext.llama.release();
         vectorContext.llama = null;
         console.log('Vector context unloaded');
@@ -38,6 +38,7 @@ export const unloadVectorContext = async () => {
 }
 
 export const generateEmbedding = async (text: string): Promise<number[] | null> => {
+    console.log('vectorContext.llama', vectorContext.llama);
     if (!vectorContext.llama) {
         console.error('Vector context not initialized');
         return null;
