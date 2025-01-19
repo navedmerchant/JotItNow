@@ -13,10 +13,10 @@ import { Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
 import { AppDispatch, RootState } from '../store/store';
-import VoiceService from '../services/voice';
 import { v4 as uuidv4 } from 'uuid';
 import { storeEmbedding } from '../services/database';
 import { generateEmbedding, loadVectorContext } from '../services/vector';
+import { getLlamaContext } from '../services/llama';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
@@ -134,13 +134,60 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
     }
   };
 
-  // Generate summary using LLM
+  // Update the summarizeText function
   const summarizeText = async () => {
-    // TODO: Implement llama.rn summarization
     console.log('Summarizing text:', transcribedText);
-    setSummarizedText(transcribedText);
     setShowSummarized(true);
-    processAndStoreEmbeddings(transcribedText).catch(console.error);
+    const llamaContext = getLlamaContext();
+    if (!llamaContext || !llamaContext.llama) {
+      console.error('Llama context not found');
+      return;
+    }
+
+    const systemPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    You are an advanced AI designed to summarize transcripts with precision and clarity. Your tasks are:
+    1. Create a concise but detailed summary that captures all critical information
+    2. Extract and list any action items, including who is responsible and deadlines if mentioned
+    3. Maintain the original intent while being clear and concise
+    4. Format the output in markdown with clear sections
+    <|eot_id|>`;
+
+    const userPrompt = `<|start_header_id|>user<|end_header_id|>
+    Please summarize this transcript:
+    ${transcribedText}
+    <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+
+    const fullPrompt = systemPrompt + userPrompt;
+
+    try {
+      let summary = '';
+      const result = await llamaContext.llama.completion(
+        {
+          prompt: fullPrompt,
+          n_predict: 1024,
+          temperature: 0.7,
+        },
+        (data) => {
+          if (data.token === "<|eot_id|>") {
+            return;
+          }
+          summary += data.token;
+          setSummarizedText(summary);
+        }
+      );
+
+      if (!result) {
+        throw new Error('Summarization failed');
+      }
+
+      const finalSummary = result.text.replace("<|eot_id|>", "");
+      setSummarizedText(finalSummary);
+      await processAndStoreEmbeddings(transcribedText);
+
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      setSummarizedText('Sorry, I encountered an error while summarizing. Please try again.');
+    }
   };
 
   // Add useEffect to save note whenever transcribed text changes
