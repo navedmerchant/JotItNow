@@ -15,6 +15,7 @@ import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Markdown from 'react-native-markdown-display';
 import { MenuOption } from 'react-native-popup-menu';
 import Toast from 'react-native-simple-toast';
+import { useIsFocused } from '@react-navigation/native';
 
 type ChatScreenProps = {
   route?: { params?: { noteId?: string } };  // Optional route params for noteId
@@ -39,6 +40,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const textInputRef = useRef<TextInput>(null);
   const systemPrompt = useRef('');
+  const isFocused = useIsFocused();
   
 
   useEffect(() => {
@@ -70,8 +72,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       const hasChunks = await hasAnyChunks(noteId);
       setHasContent(hasChunks);
     };
-    checkContent();
-  }, [route?.params?.noteId]);
+
+    if (isFocused) {
+      checkContent();
+    }
+  }, [route?.params?.noteId, isFocused]);
 
   const scrollToBottom = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });

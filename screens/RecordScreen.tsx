@@ -208,6 +208,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
       // Generate title after summary
       const titlePrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
       Generate a short, descriptive title (3-6 words) for this note based on its summary.
+      Return just the title and nothing else.
       <|eot_id|><|start_header_id|>user<|end_header_id|>
       Summary:
       ${finalSummary}
