@@ -14,10 +14,10 @@ export const loadLlamaContext = async () => {
     }
     try {
         llamaContext.llama = await initLlama({
-            model: 'file://Llama-3.2-3B-Instruct-Q4_K_M.gguf',
+            model: 'file://qwen2.5-1.5b-instruct-q4_k_m.gguf',
             is_model_asset: true,
             n_ctx: 4096,  
-            n_gpu_layers: 48
+            n_gpu_layers: 28
         });
         console.log('Llama context loaded');
         return llamaContext;

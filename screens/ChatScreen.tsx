@@ -97,7 +97,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       setInputText('');
       setIsTyping(true);
 
-      systemPrompt.current =  `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      systemPrompt.current =  `
       You are a note taking AI assistant. You are given the relevant context of the note.
       The context will be provided in <context> tags. Answer the user's question based on the context.
       If the user's question is not related to the context, say so.
@@ -106,7 +106,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       If the user's question is a request for information, provide the information.
       If the user's question is a request for help, provide help.
       If the user's question is a request for a task to be completed, complete the task.
-      <|eot_id|>`;
+      `;
 
       const embedding = await generateEmbedding(inputText);
       const noteId = route?.params?.noteId || ''; // Default fallback
@@ -129,12 +129,12 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         contextPrompt = '<context></context>';
       }
 
-      const firstPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-      ${systemPrompt.current}<|eot_id|><|start_header_id|>user<|end_header_id|> 
-      ${contextPrompt}${inputText}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
+      const firstPrompt = `<|im_start|>system<\n
+      ${systemPrompt.current}<|im_end|>\n<|im_start|>user\n
+      ${contextPrompt}${inputText}<|im_end|>\n<|im_start|>assistant\n`
 
-      const otherPrompts = `<|start_header_id|>user<|end_header_id|> 
-      ${contextPrompt}${inputText}<|eot_id|><|start_header_id|>assistant<|end_header_id|>`
+      const otherPrompts = `<|im_start|>user\n
+      ${contextPrompt}${inputText}<|im_end|>\n<|im_start|>assistant\n`
 
       let prompt;
       if (messages.length == 0) {
@@ -159,7 +159,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
             temperature: 0.7,
           },
           (data) => {
-            if  (data.token == "<|eot_id|>") {
+            if  (data.token == "<|im_end|>") {
                 return;
             }
             setCurrentResponse(prev => prev + data.token);
@@ -172,7 +172,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         
         const { text, timings } = result;
         chatContext.current = chatContext.current + text;
-        const displayText = text.replace("<|eot_id|>", "")
+        const displayText = text.replace("<|im_end|>", "")
         addMessage(displayText, false);
       } catch (error) {
         console.error('Error generating AI response:', error);

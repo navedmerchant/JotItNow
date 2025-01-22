@@ -156,29 +156,21 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
         await deleteNoteEmbeddings(noteId.current);
       }
 
-      const systemPrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      const systemPrompt = `<|im_start|>system\n
       You are an advanced AI designed to summarize transcripts with precision and clarity. Your tasks are:
       1. Create a concise but detailed summary that captures all critical information
       2. Extract and list any action items, including who is responsible and deadlines if mentioned
       3. Maintain the original intent while being clear and concise
       4. Format the output in markdown with clear sections using # for main headings and ## for subheadings
       5. Use bullet points (•) for lists and emphasis (*) for important points
-      <|eot_id|>`;
+      <|im_end|>`;
 
-      const userPrompt = `<|start_header_id|>user<|end_header_id|>
-      Please summarize this transcript and format it in markdown with the following sections:
-      # Summary
-      [Main summary here]
-      
-      ## Key Points
-      • [Key points as bullet list]
-      
-      ## Action Items
-      • [Action items if any]
-      
+      const userPrompt = `<|im_start|>user\n
+      Please summarize this transcript and format it in markdown with the Summary, Keypoints 
+      and action items if any.
       Transcript to summarize:
       ${transcribedText}
-      <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+      <|im_end|><|im_start|>assistant\n`;
 
       const fullPrompt = systemPrompt + userPrompt;
 
@@ -190,7 +182,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
           temperature: 0.7,
         },
         (data) => {
-          if (data.token === "<|eot_id|>") {
+          if (data.token === "<|im_end|>") {
             return;
           }
           summary += data.token;
@@ -202,17 +194,18 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
         throw new Error('Summarization failed');
       }
 
-      const finalSummary = result.text.replace("<|eot_id|>", "");
+      const finalSummary = result.text.replace("<|im_end|>", "");
+      console.log("finalSummary = " + finalSummary)
       setSummarizedText(finalSummary);
       
       // Generate title after summary
-      const titlePrompt = `<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+      const titlePrompt = `<|im_start|>system\n
       Generate a short, descriptive title (3-6 words) for this note based on its summary.
       Return just the title and nothing else.
-      <|eot_id|><|start_header_id|>user<|end_header_id|>
+      <|im_end|><|im_start|>user\n
       Summary:
       ${finalSummary}
-      <|eot_id|><|start_header_id|>assistant<|end_header_id|>`;
+      <|im_end|><|im_start|>assistant\n`;
 
       let generatedTitle = '';
       const titleResult = await llamaContext.llama.completion(
@@ -222,7 +215,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
           temperature: 0.7,
         },
         (data) => {
-          if (data.token === "<|eot_id|>") {
+          if (data.token === "<|im_end|>") {
             return;
           }
           generatedTitle += data.token;
@@ -231,7 +224,7 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
 
       if (titleResult) {
         const cleanTitle = titleResult.text
-          .replace("<|eot_id|>", "")
+          .replace("<|im_end|>", "")
           .trim()
           .replace(/["']/g, ''); // Remove quotes if present
         
