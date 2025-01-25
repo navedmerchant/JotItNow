@@ -40,7 +40,8 @@
     "react-native-svg": "^15.11.1",
     "react-native-vector-icons": "^10.2.0",
     "react-redux": "^9.2.0",
-    "uuid": "^11.0.5"
+    "uuid": "^11.0.5",
+    "expo-keep-awake": "~14.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

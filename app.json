@@ -1,6 +1,7 @@
 {
   "name": "JotItNow",
   "displayName": "JotItNow",
+  "icon": "./assets/images/icon.png",
   "expo": {
     "plugins": [
       [

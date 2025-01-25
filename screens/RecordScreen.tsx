@@ -5,7 +5,11 @@
 
 import 'react-native-get-random-values';
 import {
+  AVAudioSessionCategory,
+  AVAudioSessionCategoryOptions,
+  AVAudioSessionMode,
   ExpoSpeechRecognitionModule,
+  setCategoryIOS,
 } from "expo-speech-recognition";
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
@@ -19,6 +23,7 @@ import { generateEmbedding } from '../services/vector';
 import { getLlamaContext } from '../services/llama';
 import Markdown from 'react-native-markdown-display';
 import { markdownStyles } from './Styles';
+import { useKeepAwake } from 'expo-keep-awake';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
@@ -74,6 +79,16 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
   // Add new state near other state declarations
   const [isTextSummarized, setIsTextSummarized] = useState(false);
 
+  useKeepAwake();
+
+  setCategoryIOS({
+    category: AVAudioSessionCategory.record, // or "playAndRecord"
+    categoryOptions: [
+      AVAudioSessionCategoryOptions.allowBluetooth,
+    ],
+    mode: AVAudioSessionMode.default,
+  });
+
   const startListener = ExpoSpeechRecognitionModule.addListener("start", () => {setIsRecording(true); setShowSummarized(false);});
   const endListener = ExpoSpeechRecognitionModule.addListener("end", () => {setIsRecording(false);});
   const resultListener = ExpoSpeechRecognitionModule.addListener("result", (event) => {
@@ -128,7 +143,6 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
           requiresOnDeviceRecognition: true,
           addsPunctuation: true,
         });
-        
       } else {
         ExpoSpeechRecognitionModule.stop();
       }
@@ -157,7 +171,8 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
       }
 
       const systemPrompt = `<|im_start|>system\n
-      You are an advanced AI designed to summarize transcripts with precision and clarity. Your tasks are:
+      You are an advanced AI designed to summarize meeting or lecture transcripts with precision and clarity. 
+      Your tasks are:
       1. Create a concise but detailed summary that captures all critical information
       2. Extract and list any action items, including who is responsible and deadlines if mentioned
       3. Maintain the original intent while being clear and concise
@@ -349,10 +364,8 @@ const RecordScreen: React.FC<RecordScreenProps> = ({ route }) => {
             onPress={summarizeText}
             style={[
               styles.summarizeButton, 
-              { backgroundColor: isTextSummarized ? '#666666' : '#007AFF' }
             ]}
             textColor="#fff"
-            disabled={isTextSummarized}
           >
             Summarize
           </Button>
