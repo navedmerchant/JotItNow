@@ -69,7 +69,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   useEffect(() => {
     const checkContent = async () => {
       const noteId = route?.params?.noteId || '';
+      console.log('[ChatScreen] Checking content for noteId:', {
+        noteId,
+        rawParams: route?.params,
+        hasRoute: !!route,
+      });
+      
       const hasChunks = await hasAnyChunks(noteId);
+      console.log('[ChatScreen] Has chunks result:', { hasChunks, noteId });
       setHasContent(hasChunks);
     };
 
@@ -109,10 +116,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       `;
 
       const embedding = await generateEmbedding(inputText);
-      const noteId = route?.params?.noteId || ''; // Default fallback
+      const noteId = route?.params?.noteId || '';
+      console.log('[ChatScreen] Processing message with noteId:', {
+        noteId,
+        rawParams: route?.params,
+        hasEmbedding: !!embedding,
+      });
+
       const similarChunks = await findSimilarChunks(embedding, noteId);
-      console.log('similarChunks', similarChunks);
-      console.log('[Chat] Found similar chunks:', similarChunks.length);
+      console.log('[ChatScreen] Found similar chunks:', {
+        count: similarChunks.length,
+        noteId,
+        firstChunk: similarChunks[0]?.chunk.substring(0, 50),
+      });
 
       // Build context from similar chunks
       const contextText = similarChunks
@@ -182,7 +198,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         setCurrentResponse('');
       }
     }
-  }, [inputText, addMessage]);
+  }, [inputText, addMessage, route?.params]);
 
   function handleStop(event: GestureResponderEvent): void {
     getLlamaContext().llama?.stopCompletion();

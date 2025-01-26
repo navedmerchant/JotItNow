@@ -31,8 +31,8 @@ export type RootStackParamList = {
 };
 
 export type TabParamList = {
-  Record: undefined;    // Tab for recording and transcribing audio
-  Chat: undefined;      // Tab for chatting with context
+  Record: { noteId?: string };    // Tab for recording and transcribing audio
+  Chat: { noteId?: string };      // Tab for chatting with context
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -43,7 +43,6 @@ const Tab = createMaterialTopTabNavigator<TabParamList>();
  * Contains two tabs: Record (for audio recording) and Chat (for conversations).
  */
 const NewNoteTabNavigator = () => {
-  // Get the current note from Redux store
   const notes = useSelector((state: RootState) => state.notes.notes);
   const route = useRoute<RouteProp<RootStackParamList, 'NewNote'>>();
   const noteId = route.params?.params?.noteId;
@@ -69,6 +68,7 @@ const NewNoteTabNavigator = () => {
       <Tab.Screen 
         name="Record" 
         component={RecordScreen}
+        initialParams={{ noteId }}
         options={{ 
           title: currentNote?.title || 'Record Note',
           tabBarLabel: 'Record'
@@ -77,6 +77,7 @@ const NewNoteTabNavigator = () => {
       <Tab.Screen 
         name="Chat" 
         component={ChatScreen}
+        initialParams={{ noteId }}
         options={{ 
           title: currentNote?.title || 'Chat',
           tabBarLabel: 'Chat'
