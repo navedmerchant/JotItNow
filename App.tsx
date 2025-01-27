@@ -19,6 +19,7 @@ import NoteListScreen from './screens/NoteListScreen';
 import RecordScreen from './screens/RecordScreen';
 import ChatScreen from './screens/ChatScreen';
 import { MenuProvider } from 'react-native-popup-menu';
+import SummarizeScreen from './screens/SummarizeScreen';
 
 // Type definitions
 export type RootStackParamList = {
@@ -32,6 +33,7 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Record: { noteId?: string };    // Tab for recording and transcribing audio
+  Summarize: { noteId?: string; transcribedText?: string };
   Chat: { noteId?: string };      // Tab for chatting with context
 };
 
@@ -72,6 +74,15 @@ const NewNoteTabNavigator = () => {
         options={{ 
           title: currentNote?.title || 'Record Note',
           tabBarLabel: 'Record'
+        }}
+      />
+      <Tab.Screen 
+        name="Summarize" 
+        component={SummarizeScreen}
+        initialParams={{ noteId }}
+        options={{ 
+          title: 'Summarize',
+          tabBarLabel: 'Summarize'
         }}
       />
       <Tab.Screen 

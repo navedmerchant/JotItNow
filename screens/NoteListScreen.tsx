@@ -19,6 +19,7 @@ import { onDatabaseInitialized } from '../services/database';
 import { setContextLimit } from 'llama.rn';
 import { loadLlamaContext, unloadLlamaContext } from '../services/llama';
 import { loadVectorContext, unloadVectorContext } from '../services/vector';
+import { setActiveNoteId } from '../store/uiSlice';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -77,7 +78,10 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity 
-          onPress={() => navigation.navigate('NewNote')}
+          onPress={() => {
+            dispatch(setActiveNoteId(null));
+            navigation.navigate('NewNote');
+          }}
           style={{ marginRight: 16 }}
         >
           <Plus size={24} color="#fff" />
@@ -108,10 +112,10 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
         renderItem={({ item }) => (
           <NoteItem 
             note={item} 
-            onPress={() => navigation.navigate('NewNote', { 
-              screen: 'Record',
-              params: { noteId: item.id }
-            })}
+            onPress={() => {
+              dispatch(setActiveNoteId(item.id || null));
+              navigation.navigate('NewNote', { screen: 'Record' });
+            }}
           />
         )}
         keyExtractor={(item) => item.id || uuidv4()}

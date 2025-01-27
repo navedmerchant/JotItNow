@@ -16,10 +16,10 @@ import Markdown from 'react-native-markdown-display';
 import { MenuOption } from 'react-native-popup-menu';
 import Toast from 'react-native-simple-toast';
 import { useIsFocused } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
-type ChatScreenProps = {
-  route?: { params?: { noteId?: string } };  // Optional route params for noteId
-};
+type ChatScreenProps = {};
 
 interface Message {
   id: number;
@@ -27,7 +27,7 @@ interface Message {
   isUser: boolean;
 }
 
-const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
+const ChatScreen: React.FC<ChatScreenProps> = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -41,6 +41,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
   const textInputRef = useRef<TextInput>(null);
   const systemPrompt = useRef('');
   const isFocused = useIsFocused();
+  const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
   
 
   useEffect(() => {
@@ -68,22 +69,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
 
   useEffect(() => {
     const checkContent = async () => {
-      const noteId = route?.params?.noteId || '';
       console.log('[ChatScreen] Checking content for noteId:', {
-        noteId,
-        rawParams: route?.params,
-        hasRoute: !!route,
+        noteId: activeNoteId,
       });
       
-      const hasChunks = await hasAnyChunks(noteId);
-      console.log('[ChatScreen] Has chunks result:', { hasChunks, noteId });
+      const hasChunks = await hasAnyChunks(activeNoteId || '');
+      console.log('[ChatScreen] Has chunks result:', { hasChunks, noteId: activeNoteId });
       setHasContent(hasChunks);
     };
 
     if (isFocused) {
       checkContent();
     }
-  }, [route?.params?.noteId, isFocused]);
+  }, [activeNoteId, isFocused]);
 
   const scrollToBottom = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -116,17 +114,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
       `;
 
       const embedding = await generateEmbedding(inputText);
-      const noteId = route?.params?.noteId || '';
       console.log('[ChatScreen] Processing message with noteId:', {
-        noteId,
-        rawParams: route?.params,
+        noteId: activeNoteId,
         hasEmbedding: !!embedding,
       });
 
-      const similarChunks = await findSimilarChunks(embedding, noteId);
+      const similarChunks = await findSimilarChunks(embedding, activeNoteId || '');
       console.log('[ChatScreen] Found similar chunks:', {
         count: similarChunks.length,
-        noteId,
+        noteId: activeNoteId,
         firstChunk: similarChunks[0]?.chunk.substring(0, 50),
       });
 
@@ -198,7 +194,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         setCurrentResponse('');
       }
     }
-  }, [inputText, addMessage, route?.params]);
+  }, [inputText, addMessage, activeNoteId]);
 
   function handleStop(event: GestureResponderEvent): void {
     getLlamaContext().llama?.stopCompletion();
@@ -271,7 +267,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route }) => {
         {!hasContent ? (
           <View style={styles.noContentContainer}>
             <Text style={styles.noContentText}>
-              No content available for chat. Please add some notes first.
+              No content available for chat. Please summarize your notes to process it for chat
             </Text>
           </View>
         ) : (

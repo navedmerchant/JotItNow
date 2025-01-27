@@ -166,7 +166,7 @@ export const findSimilarChunks = async (
     });
 
     // Filter out matches from the same note
-    const filteredRows = rows.filter(row => row.noteId !== noteId);
+    const filteredRows = rows.filter(row => row.noteId === noteId);
     console.log('Filtered results:', {
       originalCount: rows.length,
       filteredCount: filteredRows.length

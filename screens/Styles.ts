@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: 10,
-      backgroundColor: '#000',
+      backgroundColor: '#1c1c1c',
     },
     headerTitle: {
       color: '#fff',
@@ -217,6 +217,47 @@ const styles = StyleSheet.create({
     },
     sendButtonDisabled: {
       backgroundColor: '#ccc',
+    },
+    contentSection: {
+      marginBottom: 20,
+      padding: 16,
+      backgroundColor: '#2c2c2c',
+      borderRadius: 8,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#fff',
+      marginBottom: 12,
+    },
+    contentText: {
+      fontSize: 16,
+      color: '#fff',
+      lineHeight: 24,
+    },
+    buttonContainer: {
+      padding: 16,
+      backgroundColor: '#000',
+    },
+    button: {
+      backgroundColor: '#007AFF',
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    buttonDisabled: {
+      backgroundColor: '#666',
+    },
+    buttonText: {
+      color: '#fff',
+      fontSize: 16,
+    },
+    summarizeButton: {
+      backgroundColor: '#007AFF',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20,
+      marginRight: 8,
     },
   });
   
