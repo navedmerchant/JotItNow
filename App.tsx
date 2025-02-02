@@ -13,13 +13,14 @@ import { initDatabase } from './services/database';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { MenuProvider } from 'react-native-popup-menu';
+import SummarizeScreen from './screens/SummarizeScreen';
 
 // Screen imports
 import NoteListScreen from './screens/NoteListScreen';
 import RecordScreen from './screens/RecordScreen';
 import ChatScreen from './screens/ChatScreen';
-import { MenuProvider } from 'react-native-popup-menu';
-import SummarizeScreen from './screens/SummarizeScreen';
 
 // Type definitions
 export type RootStackParamList = {
@@ -46,9 +47,20 @@ const Tab = createMaterialTopTabNavigator<TabParamList>();
  */
 const NewNoteTabNavigator = () => {
   const notes = useSelector((state: RootState) => state.notes.notes);
-  const route = useRoute<RouteProp<RootStackParamList, 'NewNote'>>();
-  const noteId = route.params?.params?.noteId;
-  const currentNote = notes.find(note => note.id === noteId);
+  const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
+  const currentNote = notes.find(note => note.id === activeNoteId);
+  const [title, setTitle] = useState(currentNote?.title || 'New Note');
+
+  // Update effect to use activeNoteId
+  useEffect(() => {
+    console.log('useEffect: Updating title from currentNote', {
+      currentNoteTitle: currentNote?.title,
+      activeNoteId
+    });
+    if (currentNote?.title) {
+      setTitle(currentNote.title);
+    }
+  }, [currentNote?.title]);
 
   return (
     <Tab.Navigator
@@ -70,27 +82,24 @@ const NewNoteTabNavigator = () => {
       <Tab.Screen 
         name="Record" 
         component={RecordScreen}
-        initialParams={{ noteId }}
+        initialParams={{ noteId: activeNoteId || undefined }}
         options={{ 
-          title: currentNote?.title || 'Record Note',
           tabBarLabel: 'Record'
         }}
       />
       <Tab.Screen 
         name="Summarize" 
         component={SummarizeScreen}
-        initialParams={{ noteId }}
+        initialParams={{ noteId: activeNoteId || undefined }}
         options={{ 
-          title: 'Summarize',
           tabBarLabel: 'Summarize'
         }}
       />
       <Tab.Screen 
         name="Chat" 
         component={ChatScreen}
-        initialParams={{ noteId }}
+        initialParams={{ noteId: activeNoteId || undefined }}
         options={{ 
-          title: currentNote?.title || 'Chat',
           tabBarLabel: 'Chat'
         }}
       />
@@ -108,37 +117,39 @@ const App = () => {
   }, []);
 
   return (
-    <Provider store={store}>
-      <MenuProvider customStyles={menuProviderStyles}>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: '#1c1c1c',
-              },
-              headerTitleStyle: {
-                color: '#fff',
-              },
-              headerTintColor: '#fff',
-              contentStyle: {
-                backgroundColor: '#1c1c1c',
-              },
-            }}
-          >
-            <Stack.Screen 
-              name="NoteList" 
-              component={NoteListScreen}
-              options={{ title: 'My Notes' }}
-            />
-            <Stack.Screen 
-              name="NewNote" 
-              component={NewNoteTabNavigator}
-              options={{ title: 'New Note' }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </MenuProvider>
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <MenuProvider customStyles={menuProviderStyles}>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: '#1c1c1c',
+                },
+                headerTitleStyle: {
+                  color: '#fff',
+                },
+                headerTintColor: '#fff',
+                contentStyle: {
+                  backgroundColor: '#1c1c1c',
+                },
+              }}
+            >
+              <Stack.Screen 
+                name="NoteList" 
+                component={NoteListScreen}
+                options={{ title: 'My Notes' }}
+              />
+              <Stack.Screen 
+                name="NewNote" 
+                component={NewNoteTabNavigator}
+                options={{ title: 'New Note' }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </MenuProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 };
 

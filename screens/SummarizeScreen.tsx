@@ -3,7 +3,7 @@
  * Provides summarization functionality for transcribed notes.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
@@ -13,7 +13,7 @@ import { Button } from 'react-native-paper';
 import Markdown from 'react-native-markdown-display';
 import { generateEmbedding } from '../services/vector';
 import { storeEmbedding, deleteNoteEmbeddings } from '../services/database';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 type SummarizeScreenProps = {};
 
@@ -112,6 +112,7 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
   const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
   const noteId = useRef(activeNoteId || '');
   const isFocused = useIsFocused();
+  const navigation = useNavigation();
   
   useEffect(() => {
     console.log('[SummarizeScreen] Screen focused or ID changed:', {
@@ -133,6 +134,13 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
   const note = useSelector((state: RootState) => 
     state.notes.notes.find(n => n.id === noteId.current)
   );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: note?.title || 'New Note'
+    });
+  }, [activeNoteId, navigation]);
+
   const transcribedText = note?.content || '';
 
   // Update button disabled state based on transcribedText
@@ -201,7 +209,8 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
 
       // Generate title
       const titlePrompt = `<|im_start|>system\n
-      Give a short title for the below Summary. Return only the title
+      Give a short title for the below Summary. Return only the title. 
+      Do not use markdown, return it in plaintext
       <|im_end|><|im_start|>user\n
       Summary:
       ${finalSummary}
@@ -218,6 +227,10 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
           .replace("<|im_end|>", "")
           .trim()
           .replace(/["']/g, '');
+        
+        navigation.setOptions({
+            title: cleanTitle
+        });
         
         // Update note with new title and summary
         await dispatch(updateNoteContent({
@@ -321,18 +334,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summarizeButton: {
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 24,
+    width: '100%',
     backgroundColor: '#007AFF',
   },
   buttonDisabled: {
     backgroundColor: '#666',
   },
   buttonLabel: {
-    fontSize: 14,
-    marginVertical: 7,
-    marginHorizontal: 0,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   contentContainer: {
     flex: 1,

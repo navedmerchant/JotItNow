@@ -1707,7 +1707,7 @@ PODS:
     - React-utils (= 0.76.5)
   - RNCMaskedView (0.1.11):
     - React
-  - RNGestureHandler (2.21.2):
+  - RNGestureHandler (2.22.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2275,7 +2275,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 3a68408bf68d0957abcd13d610f76420005c1d91
   ReactCommon: 5809a8ee421b7219221a475b78180f8f34b5c5ec
   RNCMaskedView: 4c5ee1c8667d56077246cc6d1977f77393923560
-  RNGestureHandler: e1dcb274c17ca0680a04d7ff357e35e37c384185
+  RNGestureHandler: b9cd1bda1d2a95d390de0a88e1e41140a5a68e82
   RNReanimated: ee9a749b8f2ee2a743d2dd7b4ab66f22d63f3bda
   RNScreens: 351f431ef2a042a1887d4d90e1c1024b8ae9d123
   RNSVG: c50d29abf38abbf48ebfc50b6258f81099aeabae

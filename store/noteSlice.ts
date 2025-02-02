@@ -139,6 +139,28 @@ export const updateNoteContent = createAsyncThunk(
   }
 );
 
+// Add deleteNote thunk after other thunks
+export const deleteNote = createAsyncThunk(
+  'notes/deleteNote',
+  async (noteId: string) => {
+    const db = getDatabase();
+    if (!db) throw new Error('Database not initialized');
+
+    try {
+      // Delete embeddings first
+      await db.execute('DELETE FROM embeddings WHERE noteId = ?', [noteId]);
+      
+      // Then delete the note
+      await db.execute('DELETE FROM notes WHERE id = ?', [noteId]);
+      
+      return noteId;
+    } catch (error) {
+      console.error('[DB] Error deleting note and embeddings:', error);
+      throw new Error(`Failed to delete note: ${error}`);
+    }
+  }
+);
+
 // Redux slice configuration
 export const noteSlice = createSlice({
   name: 'notes',
@@ -172,6 +194,9 @@ export const noteSlice = createSlice({
             state.notes[index].title = action.payload.title;
           }
         }
+      })
+      .addCase(deleteNote.fulfilled, (state, action) => {
+        state.notes = state.notes.filter(note => note.id !== action.payload);
       });
   },
 });

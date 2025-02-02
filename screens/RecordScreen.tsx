@@ -6,8 +6,8 @@ import {
   ExpoSpeechRecognitionModule,
   setCategoryIOS,
 } from "expo-speech-recognition";
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Keyboard } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
@@ -62,13 +62,18 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
   const notes = useSelector((state: RootState) => state.notes.notes);
   const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
+  const navigation = useNavigation();
   // State for recording and text management
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   // Add state for preview text
   const [previewText, setPreviewText] = useState('');
-  const [showTranscription, setShowTranscription] = useState(false);
+  const [showTranscription, setShowTranscription] = useState(true);
   const [manualNotes, setManualNotes] = useState('');
+  // Add state for keyboard visibility
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  // Add state for keyboard height
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useKeepAwake();
 
@@ -231,6 +236,42 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
     };
   }, [debouncedSave]);
 
+  // Update the keyboard event listeners in useEffect
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (e) => {
+        setIsKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  // Add useLayoutEffect to update the title
+  useLayoutEffect(() => {
+    const note = notes.find(n => n.id === activeNoteId);
+    console.log('[RecordScreen] Updating title:', {
+      activeNoteId,
+      noteTitle: note?.title,
+      noteExists: !!note
+    });
+    navigation.setOptions({
+      title: note?.title || 'New Note'
+    });
+  }, [activeNoteId, notes]);
+
   const dynamicStyles = StyleSheet.create({
     notesInput: {
       flex: showTranscription ? 1 : 2,
@@ -241,12 +282,14 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
       fontSize: 16,
       marginBottom: 16,
       textAlignVertical: 'top',
+      maxHeight: 230
     },
     transcriptionContainer: {
       flex: showTranscription ? 1 : 0,
       backgroundColor: '#2c2c2c',
       borderRadius: 8,
       marginBottom: 16,
+      display: isKeyboardVisible ? 'none' : 'flex',
     },
   });
 
@@ -263,9 +306,22 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
           labelStyle={styles.recordButtonLabel}
           textColor="#fff"
         >
-          {isRecording ? 'Stop' : 'Record'}
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
         </Button>
       </View>
+
+      {/* Keep the dismiss keyboard button */}
+      {isKeyboardVisible && (
+        <TouchableOpacity 
+          style={[styles.dismissButtonBase, { bottom: keyboardHeight + 8 }]}
+          onPress={() => Keyboard.dismiss()}
+        >
+          <ChevronDown color="#fff" size={24} />
+        </TouchableOpacity>
+      )}
+
+      {/* Manual Notes Title */}
+      <Text style={styles.sectionTitle}>Your Notes</Text>
 
       {/* Manual Notes Input */}
       <TextInput
@@ -317,20 +373,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#1c1c1c',
   },
   header: {
-    flexDirection: 'row',
     marginBottom: 16,
     backgroundColor: '#1c1c1c',
-    alignItems: 'center', // Center items vertically
   },
   recordButton: {
-    height: 36,
-    paddingHorizontal: 12,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 24,
+    width: '100%',
   },
   recordButtonLabel: {
-    fontSize: 14,
-    marginVertical: 7,
-    marginHorizontal: 0,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   textContainer: {
     flex: 1,
@@ -363,6 +416,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  dismissButtonBase: {
+    position: 'absolute',
+    right: 16,
+    backgroundColor: '#007AFF',
+    padding: 8,
+    borderRadius: 8,
+    zIndex: 1,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
 });
 

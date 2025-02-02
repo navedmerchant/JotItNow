@@ -4,13 +4,13 @@
  */
 
 import React, { useEffect, useRef, useLayoutEffect } from 'react';
-import { View, FlatList, StyleSheet, AppState, TouchableOpacity } from 'react-native';
+import { View, FlatList, StyleSheet, AppState, TouchableOpacity, Text, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import NoteItem from '../components/NoteItem';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store/store';
-import { fetchNotes } from '../store/noteSlice';
+import { fetchNotes, deleteNote } from '../store/noteSlice';
 import { AppDispatch } from '../store/store';
 import { v4 as uuidv4 } from 'uuid';
 import { Plus } from 'lucide-react-native';
@@ -20,6 +20,7 @@ import { setContextLimit } from 'llama.rn';
 import { loadLlamaContext, unloadLlamaContext } from '../services/llama';
 import { loadVectorContext, unloadVectorContext } from '../services/vector';
 import { setActiveNoteId } from '../store/uiSlice';
+import { Swipeable } from 'react-native-gesture-handler';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -105,18 +106,50 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
     });
   }, []);
 
+  const renderRightActions = (noteId: string) => {
+    return (
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => {
+          Alert.alert(
+            'Delete Note',
+            'Are you sure you want to delete this note?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Delete',
+                onPress: () => dispatch(deleteNote(noteId)),
+                style: 'destructive',
+              },
+            ]
+          );
+        }}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
         data={notes}
         renderItem={({ item }) => (
-          <NoteItem 
-            note={item} 
-            onPress={() => {
-              dispatch(setActiveNoteId(item.id || null));
-              navigation.navigate('NewNote', { screen: 'Record' });
-            }}
-          />
+          <Swipeable
+            renderRightActions={() => item.id ? renderRightActions(item.id) : null}
+            rightThreshold={40}
+          >
+            <NoteItem 
+              note={item} 
+              onPress={() => {
+                dispatch(setActiveNoteId(item.id || null));
+                navigation.navigate('NewNote', { screen: 'Record' });
+              }}
+            />
+          </Swipeable>
         )}
         keyExtractor={(item) => item.id || uuidv4()}
         style={styles.list}
@@ -137,6 +170,17 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingVertical: 8,
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

@@ -3,7 +3,7 @@
  * Allows users to chat with context from the notes using llama.rn.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { View, TextInput, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Clipboard, EmitterSubscription, Keyboard, GestureResponderEvent, NativeScrollEvent, NativeSyntheticEvent, Text } from 'react-native';
 import { getLlamaContext } from '../services/llama';
 import { generateEmbedding } from '../services/vector';
@@ -15,7 +15,7 @@ import { Menu, MenuOptions, MenuTrigger } from 'react-native-popup-menu';
 import Markdown from 'react-native-markdown-display';
 import { MenuOption } from 'react-native-popup-menu';
 import Toast from 'react-native-simple-toast';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 
@@ -42,6 +42,8 @@ const ChatScreen: React.FC<ChatScreenProps> = () => {
   const systemPrompt = useRef('');
   const isFocused = useIsFocused();
   const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
+  const navigation = useNavigation();
+  const notes = useSelector((state: RootState) => state.notes.notes);
   
 
   useEffect(() => {
@@ -82,6 +84,13 @@ const ChatScreen: React.FC<ChatScreenProps> = () => {
       checkContent();
     }
   }, [activeNoteId, isFocused]);
+
+  useLayoutEffect(() => {
+    const note = notes.find(note => note.id === activeNoteId);
+    navigation.setOptions({
+      title: note?.title || 'New Note'
+    });
+  }, [activeNoteId, notes]);
 
   const scrollToBottom = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
