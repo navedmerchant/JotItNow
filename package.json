@@ -21,8 +21,10 @@
     "date-fns": "^4.1.0",
     "expo": "^52.0.0",
     "expo-constants": "~17.0.4",
+    "expo-keep-awake": "~14.0.2",
     "expo-speech-recognition": "^1.1.0",
     "llama.rn": "^0.4.7",
+    "lodash": "^4.17.21",
     "lucide-react-native": "^0.471.0",
     "react": "18.3.1",
     "react-native": "0.76.5",
@@ -40,8 +42,7 @@
     "react-native-svg": "^15.11.1",
     "react-native-vector-icons": "^10.2.0",
     "react-redux": "^9.2.0",
-    "uuid": "^11.0.5",
-    "expo-keep-awake": "~14.0.2"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -54,6 +55,7 @@
     "@react-native/eslint-config": "0.76.5",
     "@react-native/metro-config": "0.76.5",
     "@react-native/typescript-config": "0.76.5",
+    "@types/lodash": "^4.17.15",
     "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
     "@types/uuid": "^10.0.0",

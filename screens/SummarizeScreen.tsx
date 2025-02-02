@@ -4,14 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { updateNoteContent } from '../store/noteSlice';
 import { getLlamaContext } from '../services/llama';
-import { styles } from './Styles';
+import { Button } from 'react-native-paper';
 import Markdown from 'react-native-markdown-display';
-import { markdownStyles } from './Styles';
 import { generateEmbedding } from '../services/vector';
 import { storeEmbedding, deleteNoteEmbeddings } from '../services/database';
 import { useIsFocused } from '@react-navigation/native';
@@ -240,45 +239,66 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     }
   };
 
+  const markdownStyles = {
+    body: {
+      color: '#fff',
+    },
+    heading1: {
+      color: '#fff',
+      fontSize: 24,
+      marginBottom: 16,
+    },
+    heading2: {
+      color: '#fff',
+      fontSize: 20,
+      marginBottom: 12,
+    },
+    paragraph: {
+      color: '#fff',
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    listItem: {
+      color: '#fff',
+    },
+    bullet_list: {
+      color: '#fff',
+    },
+  };
+
   return (
     <View style={styles.container}>
       {/* Header with button */}
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={[
-            styles.summarizeButton, 
-            isDisabled && styles.buttonDisabled
-          ]} 
+        <Button
+          mode="contained"
           onPress={generateSummary}
           disabled={isDisabled}
+          style={[styles.summarizeButton, isDisabled && styles.buttonDisabled]}
+          labelStyle={styles.buttonLabel}
+          textColor="#fff"
         >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>
-              {summarizedText ? 'Regenerate Summary' : 'Generate Summary'}
-            </Text>
-          )}
-        </TouchableOpacity>
+          {isLoading ? 'Generating...' : (summarizedText ? 'Regenerate Summary' : 'Generate Summary')}
+        </Button>
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.messagesContainer}>
+      <ScrollView style={styles.contentContainer}>
         {!transcribedText ? (
-          <View style={styles.noContentContainer}>
-            <Text style={styles.noContentText}>
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>
               No content available for summarization. Please add some notes first.
             </Text>
           </View>
         ) : summarizedText ? (
-          <View style={styles.contentSection}>
+          <View style={styles.summaryContainer}>
             <Markdown style={markdownStyles}>
               {summarizedText}
             </Markdown>
           </View>
         ) : (
-          <View style={styles.noContentContainer}>
-            <Text style={styles.noContentText}>
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>
               Generate a summary to see it here
             </Text>
           </View>
@@ -287,5 +307,53 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#1c1c1c',
+  },
+  header: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    backgroundColor: '#1c1c1c',
+    alignItems: 'center',
+  },
+  summarizeButton: {
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    backgroundColor: '#007AFF',
+  },
+  buttonDisabled: {
+    backgroundColor: '#666',
+  },
+  buttonLabel: {
+    fontSize: 14,
+    marginVertical: 7,
+    marginHorizontal: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    backgroundColor: '#2c2c2c',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  summaryContainer: {
+    padding: 16,
+  },
+  messageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  messageText: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+});
 
 export default SummarizeScreen; 

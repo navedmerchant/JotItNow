@@ -1,8 +1,3 @@
-/**
- * Screen for recording and transcribing audio notes.
- * Uses whisper.rn for transcription and llama.rn for summarization.
- */
-
 import 'react-native-get-random-values';
 import {
   AVAudioSessionCategory,
@@ -11,9 +6,9 @@ import {
   ExpoSpeechRecognitionModule,
   setCategoryIOS,
 } from "expo-speech-recognition";
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Button } from 'react-native-paper';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { Button, IconButton } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { addNoteWithPersistence, updateNoteContent } from '../store/noteSlice';
 import { AppDispatch, RootState } from '../store/store';
@@ -23,6 +18,8 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialTopTabNavigationProp } from '@react-navigation/material-top-tabs';
 import { TabParamList } from '../App';
 import { setActiveNoteId } from '../store/uiSlice';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { debounce } from 'lodash';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
@@ -59,6 +56,8 @@ const splitIntoChunks = (text: string, targetLength: number = 300): string[] => 
   return chunks;
 };
 
+const SAVE_DELAY_MS = 1000; // 1 second delay
+
 const RecordScreen: React.FC<RecordScreenProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
   const notes = useSelector((state: RootState) => state.notes.notes);
@@ -68,6 +67,8 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
   const [transcribedText, setTranscribedText] = useState('');
   // Add state for preview text
   const [previewText, setPreviewText] = useState('');
+  const [showTranscription, setShowTranscription] = useState(false);
+  const [manualNotes, setManualNotes] = useState('');
 
   useKeepAwake();
 
@@ -126,7 +127,6 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
             date: new Date(),
           }));
           
-          // Update active note ID in Redux instead of navigation params
           dispatch(setActiveNoteId(noteId.current));
         }
         ExpoSpeechRecognitionModule.start({
@@ -146,7 +146,30 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
     }
   };
 
-  // Add useEffect to load note data
+  // Update the useEffect for note content changes
+  useEffect(() => {
+    const updateNote = async () => {
+      if (noteId.current) {
+        console.log('Updating note content:', {
+          noteId: noteId.current,
+          manualNotesLength: manualNotes.length,
+          transcribedTextLength: transcribedText.length
+        });
+        
+        // Combine manual notes and transcribed text
+        const combinedContent = `${manualNotes}\n\n--- Voice Transcription ---\n${transcribedText}`;
+        
+        await dispatch(updateNoteContent({
+          id: noteId.current,
+          content: combinedContent
+        }));
+      }
+    };
+
+    updateNote();
+  }, [transcribedText, dispatch]);
+
+  // Update the useEffect for loading note data
   useEffect(() => {
     console.log('useEffect[activeNoteId] - Loading note data', {
       activeNoteId,
@@ -156,65 +179,132 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
     if (activeNoteId) {
       const note = notes.find(n => n.id === activeNoteId);
       if (note) {
-        setTranscribedText(note.content);
+        // Split content into manual notes and transcription
+        const parts = note.content.split('--- Voice Transcription ---');
+        setManualNotes(parts[0]?.trim() || '');
+        setTranscribedText(parts[1]?.trim() || '');
       }
       noteId.current = activeNoteId;
     }
   }, [activeNoteId]);
 
-  // Add useEffect to update note content when transcribedText changes
-  useEffect(() => {
-    const updateNote = async () => {
-      if (noteId.current && transcribedText) {
-        console.log('Updating note content:', {
-          noteId: noteId.current,
-          contentLength: transcribedText.length
-        });
-        
-        await dispatch(updateNoteContent({
-          id: noteId.current,
-          content: transcribedText
-        }));
-      }
-    };
-
-    updateNote();
-  }, [transcribedText, dispatch]);
-
   // Inside RecordScreen component, add noteId ref
   const noteId = useRef<string>('');
 
+  // Add debounced save function using useCallback
+  const debouncedSave = useCallback(
+    debounce(async (noteId: string, text: string, transcribedText: string) => {
+      console.log('Saving note with debounce:', { noteId });
+      const combinedContent = `${text}\n\n--- Voice Transcription ---\n${transcribedText}`;
+      await dispatch(updateNoteContent({
+        id: noteId,
+        content: combinedContent
+      }));
+    }, SAVE_DELAY_MS),
+    [dispatch, transcribedText]
+  );
+
+  // Update the handler to use debounced save
+  const handleNotesChange = async (text: string) => {
+    setManualNotes(text);
+    
+    if (noteId.current) {
+      // Use debounced save for existing notes
+      debouncedSave(noteId.current, text, transcribedText);
+    } else {
+      // Create new note immediately (no debounce for initial creation)
+      noteId.current = uuidv4();
+      await dispatch(addNoteWithPersistence({
+        id: noteId.current,
+        title: 'New Note',
+        content: text,
+        date: new Date(),
+      }));
+      dispatch(setActiveNoteId(noteId.current));
+    }
+  };
+
+  // Add cleanup for debounced function
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
+
+  const dynamicStyles = StyleSheet.create({
+    notesInput: {
+      flex: showTranscription ? 1 : 2,
+      backgroundColor: '#2c2c2c',
+      color: '#fff',
+      padding: 16,
+      borderRadius: 8,
+      fontSize: 16,
+      marginBottom: 16,
+      textAlignVertical: 'top',
+    },
+    transcriptionContainer: {
+      flex: showTranscription ? 1 : 0,
+      backgroundColor: '#2c2c2c',
+      borderRadius: 8,
+      marginBottom: 16,
+    },
+  });
+
   return (
     <View style={styles.container}>
-      {/* Header with buttons */}
+      {/* Header with recording button */}
       <View style={styles.header}>
-        <View style={styles.flex} />
-      </View>
-
-      {/* Rest of the content */}
-      <ScrollView style={styles.textContainer}>
-        <Text style={styles.text}>
-          {transcribedText}
-        </Text>
-        {isRecording && previewText && (
-          <Text style={[styles.text, styles.previewText]}>
-            {previewText}
-          </Text>
-        )}
-      </ScrollView>
-
-      {/* Bottom controls */}
-      <View style={styles.bottomContainer}>
         <Button
           mode="contained"
           onPress={toggleRecording}
           style={[styles.recordButton, { 
             backgroundColor: isRecording ? '#c20a10' : '#007AFF'
           }]}
+          labelStyle={styles.recordButtonLabel}
           textColor="#fff"
         >
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
+          {isRecording ? 'Stop' : 'Record'}
         </Button>
+      </View>
+
+      {/* Manual Notes Input */}
+      <TextInput
+        style={dynamicStyles.notesInput}
+        value={manualNotes}
+        onChangeText={handleNotesChange}
+        placeholder="Start typing your notes here..."
+        placeholderTextColor="#666"
+        multiline
+        textAlignVertical="top"
+      />
+
+      {/* Transcription Section */}
+      <View style={dynamicStyles.transcriptionContainer}>
+        <TouchableOpacity 
+          style={styles.transcriptionHeader}
+          onPress={() => setShowTranscription(!showTranscription)}
+        >
+          <Text style={styles.transcriptionTitle}>Voice Transcription</Text>
+          <IconButton
+            icon={() => showTranscription ? 
+              <ChevronUp color="#fff" size={24} /> : 
+              <ChevronDown color="#fff" size={24} />
+            }
+          />
+        </TouchableOpacity>
+
+        {showTranscription && (
+          <ScrollView style={styles.textContainer}>
+            <Text style={styles.text}>
+              {transcribedText}
+            </Text>
+            {isRecording && previewText && (
+              <Text style={[styles.text, styles.previewText]}>
+                {previewText}
+              </Text>
+            )}
+          </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -230,9 +320,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 16,
     backgroundColor: '#1c1c1c',
+    alignItems: 'center', // Center items vertically
   },
-  flex: {
-    flex: 1,
+  recordButton: {
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+  },
+  recordButtonLabel: {
+    fontSize: 14,
+    marginVertical: 7,
+    marginHorizontal: 0,
   },
   textContainer: {
     flex: 1,
@@ -246,15 +344,25 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#fff',
   },
-  bottomContainer: {
-    marginTop: 'auto',
-  },
-  recordButton: {
-    marginBottom: 16,
-  },
   previewText: {
     color: '#999999',
     fontStyle: 'italic',
+  },
+  transcriptionContainer: {
+    backgroundColor: '#2c2c2c',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  transcriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 8,
+  },
+  transcriptionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
