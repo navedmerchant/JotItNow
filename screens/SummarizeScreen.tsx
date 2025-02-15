@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { updateNoteContent } from '../store/noteSlice';
@@ -166,20 +166,22 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     setIsLoading(true);
     const llamaContext = getLlamaContext();
 
+    if (!llamaContext || !llamaContext.llama) {
+      Alert.alert('Model Not Ready', 'Please wait a moment for the AI model to initialize and try again.');
+      return;
+    }
+
     try {
       const systemPrompt = `<|im_start|>system\n
-      You are an advanced AI designed to summarize meeting or lecture transcripts with precision and clarity. 
+      You are an advanced AI designed to summarize transcripts with precision and clarity. 
       Your tasks are:
       1. Create a concise but detailed summary that captures all critical information
-      2. Extract and list any action items, including who is responsible and deadlines if mentioned
-      3. Maintain the original intent while being clear and concise
-      4. Format the output in markdown with clear sections using # for main headings and ## for subheadings
-      5. Use bullet points (•) for lists and emphasis (*) for important points
+      2. Format the output in markdown with clear sections using # for main headings and ## for subheadings
+      3. Use bullet points (•) for lists and emphasis (*) for important points
       <|im_end|>`;
 
       const userPrompt = `<|im_start|>user\n
-      Please summarize this transcript and format it in markdown with the Summary, Keypoints 
-      and action items if any.
+      Please summarize this transcript and format it in markdown with the Summary and action items if any
       Transcript to summarize:
       ${transcribedText}
       <|im_end|><|im_start|>assistant\n`;
@@ -297,6 +299,11 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
         </Button>
       </View>
 
+      {/* Title */}
+      {transcribedText && (
+        <Text style={[styles.titleText, styles.titlePadding]}>{note?.title || 'Note Summary'}</Text>
+      )}
+
       {/* Content */}
       <ScrollView style={styles.contentContainer}>
         {!transcribedText ? (
@@ -367,6 +374,15 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 16,
     textAlign: 'center',
+  },
+  titleText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  titlePadding: {
+    padding: 16,
   },
 });
 
