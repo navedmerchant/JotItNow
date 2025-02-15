@@ -137,7 +137,7 @@ const App = () => {
               <Stack.Screen 
                 name="NoteList" 
                 component={NoteListScreen}
-                options={{ title: 'Note' }}
+                options={{ title: 'JotItNow' }}
               />
               <Stack.Screen 
                 name="NewNote" 

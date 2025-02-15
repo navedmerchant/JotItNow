@@ -21,6 +21,7 @@ import { loadLlamaContext, unloadLlamaContext } from '../services/llama';
 import { loadVectorContext, unloadVectorContext } from '../services/vector';
 import { setActiveNoteId } from '../store/uiSlice';
 import { Swipeable } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 type NoteListScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'NoteList'>;
@@ -75,29 +76,6 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
     loadLlamaContext();
   }, []);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity 
-          onPress={() => {
-            dispatch(setActiveNoteId(null));
-            navigation.navigate('NewNote');
-          }}
-          style={{ marginRight: 16 }}
-        >
-          <Plus size={24} color="#fff" />
-        </TouchableOpacity>
-      ),
-      headerStyle: {
-        backgroundColor: '#1c1c1c',
-      },
-      headerTitleStyle: {
-        color: '#fff',
-      },
-      headerTintColor: '#fff',
-    });
-  }, [navigation]);
-
   useEffect(() => {
     // Register callback for database initialization
     onDatabaseInitialized(() => {
@@ -108,33 +86,47 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
 
   const renderRightActions = (noteId: string) => {
     return (
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => {
-          Alert.alert(
-            'Delete Note',
-            'Are you sure you want to delete this note?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Delete',
-                onPress: () => dispatch(deleteNote(noteId)),
-                style: 'destructive',
-              },
-            ]
-          );
-        }}
-      >
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
+      <View style={styles.rightActionsContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => {
+            Alert.alert(
+              'Delete Note',
+              'Are you sure you want to delete this note?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Delete',
+                  onPress: () => dispatch(deleteNote(noteId)),
+                  style: 'destructive',
+                },
+              ]
+            );
+          }}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
+      <TouchableOpacity 
+        style={styles.newNoteButton}
+        onPress={() => {
+          dispatch(setActiveNoteId(null));
+          navigation.navigate('NewNote', { screen: 'Record' });
+        }}
+      >
+        <View style={styles.newNoteContent}>
+          <Plus size={24} color="#fff" />
+          <Text style={styles.newNoteText}>New Note</Text>
+        </View>
+      </TouchableOpacity>
       <FlatList
         data={notes}
         renderItem={({ item }) => (
@@ -155,7 +147,7 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -171,16 +163,41 @@ const styles = StyleSheet.create({
   listContent: {
     paddingVertical: 8,
   },
+  rightActionsContainer: {
+    marginVertical: 4,
+    marginRight: 8,
+  },
   deleteButton: {
     backgroundColor: '#FF3B30',
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
     height: '100%',
+    borderRadius: 8,
   },
   deleteButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  newNoteButton: {
+    backgroundColor: '#2c2c2c',
+    marginHorizontal: 8,
+    marginVertical: 4,
+    borderRadius: 8,
+    padding: 16,
+    marginLeft: 20,
+    marginRight: 20
+  },
+  newNoteContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  newNoteText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 

@@ -29,7 +29,7 @@ const NoteItem: React.FC<NoteItemProps> = ({ note, onPress }) => {
       <Text style={styles.title}>{note.title}</Text>
       {/* Content preview */}
       <Text style={styles.preview} numberOfLines={2}>
-        {note.content}
+        {note.content?.replace('--- Voice Transcription ---', '').trim()}
       </Text>
     </TouchableOpacity>
   );
