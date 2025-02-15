@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1c1c1c',
   },
   recordButton: {
-    height: 48,
+    height: 44,
     borderRadius: 24,
     width: '100%',
   },
@@ -416,6 +416,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    paddingLeft: 10
   },
   dismissButtonBase: {
     position: 'absolute',

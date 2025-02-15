@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, StyleSheet, Alert, Share } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 import { updateNoteContent } from '../store/noteSlice';
@@ -14,6 +14,7 @@ import Markdown from 'react-native-markdown-display';
 import { generateEmbedding } from '../services/vector';
 import { storeEmbedding, deleteNoteEmbeddings } from '../services/database';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { Share2 } from 'lucide-react-native';
 
 type SummarizeScreenProps = {};
 
@@ -256,6 +257,23 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     }
   };
 
+  // Add share handler function
+  const handleShare = async () => {
+    if (!summarizedText) {
+      Alert.alert('No Summary', 'Please generate a summary first before sharing.');
+      return;
+    }
+
+    try {
+      const result = await Share.share({
+        message: `${note?.title || 'Note Summary'}\n\n${summarizedText}`,
+      });
+    } catch (error) {
+      console.error('Error sharing summary:', error);
+      Alert.alert('Error', 'Failed to share the summary. Please try again.');
+    }
+  };
+
   const markdownStyles = {
     body: {
       color: '#fff',
@@ -285,7 +303,7 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with button */}
+      {/* Header with buttons */}
       <View style={styles.header}>
         <Button
           mode="contained"
@@ -297,6 +315,20 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
         >
           {isLoading ? 'Generating...' : (summarizedText ? 'Regenerate Summary' : 'Generate Summary')}
         </Button>
+        
+        {/* Replace Share button */}
+        {summarizedText && (
+          <TouchableOpacity 
+            onPress={handleShare}
+            style={styles.shareButton}
+          >
+            <Share2 
+              size={24}
+              color="#fff"
+              strokeWidth={2}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Title */}
@@ -341,12 +373,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#1c1c1c',
     alignItems: 'center',
+    gap: 8, // Add gap between buttons
   },
   summarizeButton: {
-    height: 48,
+    height: 44,
     borderRadius: 24,
-    width: '100%',
+    flex: 1, // Changed from width: '100%' to flex: 1
     backgroundColor: '#007AFF',
+  },
+  shareButton: {
+    height: 44,
+    width: 48,
+    borderRadius: 24,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonDisabled: {
     backgroundColor: '#666',
