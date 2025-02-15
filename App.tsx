@@ -12,7 +12,6 @@ import { store } from './store/store';
 import { initDatabase } from './services/database';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
-import { useRoute, RouteProp } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MenuProvider } from 'react-native-popup-menu';
 import SummarizeScreen from './screens/SummarizeScreen';
@@ -138,12 +137,12 @@ const App = () => {
               <Stack.Screen 
                 name="NoteList" 
                 component={NoteListScreen}
-                options={{ title: 'My Notes' }}
+                options={{ title: 'Note' }}
               />
               <Stack.Screen 
                 name="NewNote" 
                 component={NewNoteTabNavigator}
-                options={{ title: 'New Note' }}
+                options={{ title: 'Note' }}
               />
             </Stack.Navigator>
           </NavigationContainer>

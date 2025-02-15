@@ -118,28 +118,25 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     console.log('[SummarizeScreen] Screen focused or ID changed:', {
       isFocused,
       activeNoteId,
-      currentNoteId: noteId.current
+      currentNoteId: noteId.current,
+      noteContent: note?.content
     });
 
-    if (isFocused && activeNoteId && activeNoteId !== noteId.current) {
-      console.log('[SummarizeScreen] Updating noteId:', {
-        old: noteId.current,
-        new: activeNoteId
-      });
+    if (isFocused && activeNoteId) {
+      // Always update noteId.current when activeNoteId changes
       noteId.current = activeNoteId;
+      
+      // Clear summarized text when switching to a new note
+      if (activeNoteId !== noteId.current) {
+        setSummarizedText('');
+      }
     }
   }, [activeNoteId, isFocused]);
 
-  // Get note content from Redux store
+  // Get note content from Redux store with proper dependency tracking
   const note = useSelector((state: RootState) => 
-    state.notes.notes.find(n => n.id === noteId.current)
+    state.notes.notes.find(n => n.id === activeNoteId)
   );
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: note?.title || 'New Note'
-    });
-  }, [activeNoteId, navigation]);
 
   const transcribedText = note?.content || '';
 
@@ -156,8 +153,13 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
   }, [note?.summary]);
 
   const generateSummary = async () => {
-    if (!transcribedText) {
-      console.error('No text to summarize');
+    if (!note?.content) {
+      console.error('No content available for summarization', {
+        noteId: noteId.current,
+        hasNote: !!note,
+        hasContent: !!note?.content
+      });
+      setSummarizedText('No content available for summarization. Please ensure the note has content.');
       return;
     }
 
