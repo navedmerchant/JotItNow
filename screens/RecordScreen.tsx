@@ -75,6 +75,9 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
   // Add state for keyboard height
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // Add ScrollView ref
+  const scrollViewRef = useRef<ScrollView>(null);
+
   useKeepAwake();
 
   setCategoryIOS({
@@ -259,18 +262,15 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
     };
   }, []);
 
-  // Add useLayoutEffect to update the title
-  useLayoutEffect(() => {
-    const note = notes.find(n => n.id === activeNoteId);
-    console.log('[RecordScreen] Updating title:', {
-      activeNoteId,
-      noteTitle: note?.title,
-      noteExists: !!note
-    });
-    navigation.setOptions({
-      title: note?.title || 'New Note'
-    });
-  }, [activeNoteId, notes]);
+  // Add useEffect for auto-scrolling
+  useEffect(() => {
+    if (scrollViewRef.current && showTranscription) {
+      // Use setTimeout to ensure the content is rendered before scrolling
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [transcribedText, previewText, showTranscription]);
 
   const dynamicStyles = StyleSheet.create({
     notesInput: {
@@ -350,7 +350,13 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
         </TouchableOpacity>
 
         {showTranscription && (
-          <ScrollView style={styles.textContainer}>
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.textContainer}
+            // Add these props for better scrolling experience
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={styles.text}>
               {transcribedText}
             </Text>
