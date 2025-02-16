@@ -98,5 +98,14 @@
     <array>
       <string>audio</string>
     </array>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+      <string>arm64e</string>
+      <string>telephony</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+    </array>
   </dict>
 </plist>

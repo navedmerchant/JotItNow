@@ -114,6 +114,7 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
   const noteId = useRef(activeNoteId || '');
   const isFocused = useIsFocused();
   const navigation = useNavigation();
+  const scrollViewRef = useRef<ScrollView>(null);
   
   useEffect(() => {
     console.log('[SummarizeScreen] Screen focused or ID changed:', {
@@ -153,6 +154,16 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
     }
   }, [note?.summary]);
 
+  // Add useEffect to handle auto-scrolling when summarizedText changes
+  useEffect(() => {
+    if (summarizedText && scrollViewRef.current) {
+      // Small delay to ensure content is rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [summarizedText]);
+
   const generateSummary = async () => {
     if (!note?.content) {
       console.error('No content available for summarization', {
@@ -177,12 +188,10 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
       You are an advanced AI designed to summarize transcripts with precision and clarity. 
       Your tasks are:
       1. Create a concise but detailed summary that captures all critical information
-      2. Format the output in markdown with clear sections using # for main headings and ## for subheadings
-      3. Use bullet points (•) for lists and emphasis (*) for important points
       <|im_end|>`;
 
       const userPrompt = `<|im_start|>user\n
-      Please summarize this transcript and format it in markdown with the Summary and action items if any
+      Please summarize this transcript. Add action items if any are found.
       Transcript to summarize:
       ${transcribedText}
       <|im_end|><|im_start|>assistant\n`;
@@ -214,7 +223,7 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
 
       // Generate title
       const titlePrompt = `<|im_start|>system\n
-      Give a short title for the below Summary. Return only the title. 
+      Give a short title (10 words or less) for the below Summary. Return only the title. 
       Do not use markdown, return it in plaintext
       <|im_end|><|im_start|>user\n
       Summary:
@@ -223,7 +232,7 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
 
       const titleResult = await llamaContext.llama?.completion({
         prompt: titlePrompt,
-        n_predict: 50,
+        n_predict: 20,
         temperature: 0.7,
       });
 
@@ -340,7 +349,11 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
       )}
 
       {/* Content */}
-      <ScrollView style={styles.contentContainer}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+      >
         {!transcribedText ? (
           <View style={styles.messageContainer}>
             <Text style={styles.messageText}>
