@@ -305,7 +305,7 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
             mode="contained"
             onPress={toggleRecording}
             style={[styles.recordButton, { 
-              backgroundColor: isRecording ? '#c20a10' : '#007AFF'
+              backgroundColor: isRecording ? '#c20a10' : '#2a6773'
             }]}
             labelStyle={styles.recordButtonLabel}
             textColor="#fff"
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   dismissButtonBase: {
     position: 'absolute',
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2a6773',
     padding: 8,
     borderRadius: 8,
     zIndex: 1,
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     height: 44,
     width: 48,
     borderRadius: 22,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2a6773',
     justifyContent: 'center',
     alignItems: 'center',
   },

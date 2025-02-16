@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     },
     userMessage: {
       alignSelf: 'flex-end',
-      backgroundColor: '#007AFF',
+      backgroundColor: '#2a6773',
     },
     aiMessage: {
       width: '80%',
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     sendButton: {
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#007AFF',
+      backgroundColor: '#2a6773',
       borderRadius: 20,
       paddingHorizontal: 20,
     },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
       marginBottom: 5,
     },
     linkText: {
-      color: '#007AFF',
+      color: '#2a6773',
       fontSize: 14,
       marginTop: 5,
     },
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#000',
     },
     button: {
-      backgroundColor: '#007AFF',
+      backgroundColor: '#2a6773',
       padding: 16,
       borderRadius: 8,
       alignItems: 'center',
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
       fontSize: 16,
     },
     summarizeButton: {
-      backgroundColor: '#007AFF',
+      backgroundColor: '#2a6773',
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20,

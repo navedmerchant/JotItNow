@@ -382,13 +382,13 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 24,
     flex: 1, // Changed from width: '100%' to flex: 1
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2a6773',
   },
   shareButton: {
     height: 44,
     width: 48,
     borderRadius: 24,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2a6773',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#2a6773',
   },
   aiMessage: {
     alignSelf: 'flex-start',

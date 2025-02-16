@@ -57,7 +57,7 @@ const NewNoteTabNavigator = () => {
           backgroundColor: '#1c1c1c',
         },
         tabBarIndicatorStyle: {
-          backgroundColor: '#007AFF',
+          backgroundColor: '#2a6773',
         },
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: '#999',
