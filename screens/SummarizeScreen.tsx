@@ -230,9 +230,12 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
       if (titleResult) {
         const cleanTitle = titleResult.text
           .replace("<|im_end|>", "")
+          .replace(/[#*_~`]/g, '') // Remove markdown characters
+          .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Remove markdown links but keep text
+          .replace(/^\s*[-+*]\s+/, '') // Remove list markers
           .trim()
           .replace(/["']/g, '');
-        
+
         navigation.setOptions({
             title: cleanTitle
         });

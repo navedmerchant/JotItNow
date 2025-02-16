@@ -279,6 +279,12 @@ const ChatScreen: React.FC<ChatScreenProps> = () => {
               No content available for chat. Please summarize your notes to process it for chat
             </Text>
           </View>
+        ) : messages.length === 0 ? (
+          <View style={styles.noMessagesContainer}>
+            <Text style={styles.noMessagesText}>
+              Chats are ephemeral and intended to ask questions about your notes. You can ask it any questions about your notes and the recording!
+            </Text>
+          </View>
         ) : (
           <>
             {messages.map(renderMessage)}

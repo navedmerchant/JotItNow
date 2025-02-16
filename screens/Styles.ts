@@ -259,6 +259,19 @@ const styles = StyleSheet.create({
       borderRadius: 20,
       marginRight: 8,
     },
+    noMessagesContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      marginTop: 20,
+    },
+    noMessagesText: {
+      textAlign: 'center',
+      color: '#666',
+      fontSize: 16,
+      lineHeight: 24,
+    },
   });
   
   const markdownStyles = {

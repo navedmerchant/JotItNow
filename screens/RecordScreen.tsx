@@ -18,11 +18,14 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialTopTabNavigationProp } from '@react-navigation/material-top-tabs';
 import { TabParamList } from '../App';
 import { setActiveNoteId } from '../store/uiSlice';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, FileText } from 'lucide-react-native';
 import { debounce } from 'lodash';
 
 // Add type for the stop function
 type StopFunction = () => Promise<void>;
+
+// Add type for navigation
+type RecordScreenNavigationProp = MaterialTopTabNavigationProp<TabParamList>;
 
 type RecordScreenProps = {};
 
@@ -62,7 +65,7 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
   const notes = useSelector((state: RootState) => state.notes.notes);
   const activeNoteId = useSelector((state: RootState) => state.ui.activeNoteId);
-  const navigation = useNavigation();
+  const navigation = useNavigation<RecordScreenNavigationProp>();
   // State for recording and text management
   const [isRecording, setIsRecording] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
@@ -295,19 +298,31 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with recording button */}
+      {/* Header with recording and summarize buttons */}
       <View style={styles.header}>
-        <Button
-          mode="contained"
-          onPress={toggleRecording}
-          style={[styles.recordButton, { 
-            backgroundColor: isRecording ? '#c20a10' : '#007AFF'
-          }]}
-          labelStyle={styles.recordButtonLabel}
-          textColor="#fff"
-        >
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
-        </Button>
+        <View style={styles.headerButtons}>
+          <Button
+            mode="contained"
+            onPress={toggleRecording}
+            style={[styles.recordButton, { 
+              backgroundColor: isRecording ? '#c20a10' : '#007AFF'
+            }]}
+            labelStyle={styles.recordButtonLabel}
+            textColor="#fff"
+          >
+            {isRecording ? 'Stop Recording' : 'Start Recording'}
+          </Button>
+
+          {/* Show summarize button only when there's content */}
+          {(manualNotes || transcribedText) && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Summarize', { noteId: noteId.current })}
+              style={styles.summarizeButton}
+            >
+              <FileText color="#fff" size={24} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Keep the dismiss keyboard button */}
@@ -328,7 +343,7 @@ const RecordScreen: React.FC<RecordScreenProps> = () => {
         style={dynamicStyles.notesInput}
         value={manualNotes}
         onChangeText={handleNotesChange}
-        placeholder="Start typing your notes here..."
+        placeholder="Your notes here. Add your own notes for better summaries!"
         placeholderTextColor="#666"
         multiline
         textAlignVertical="top"
@@ -382,10 +397,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#1c1c1c',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
   recordButton: {
     height: 44,
     borderRadius: 24,
-    width: '100%',
+    flex: 1,
   },
   recordButtonLabel: {
     fontSize: 16,
@@ -437,6 +457,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  summarizeButton: {
+    height: 44,
+    width: 48,
+    borderRadius: 22,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

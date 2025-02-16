@@ -50,17 +50,6 @@ const NewNoteTabNavigator = () => {
   const currentNote = notes.find(note => note.id === activeNoteId);
   const [title, setTitle] = useState(currentNote?.title || 'New Note');
 
-  // Update effect to use activeNoteId
-  useEffect(() => {
-    console.log('useEffect: Updating title from currentNote', {
-      currentNoteTitle: currentNote?.title,
-      activeNoteId
-    });
-    if (currentNote?.title) {
-      setTitle(currentNote.title);
-    }
-  }, [currentNote?.title]);
-
   return (
     <Tab.Navigator
       screenOptions={{
