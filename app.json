@@ -16,14 +16,14 @@
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.jotitnow"
+      "package": "com.navedmerchant.jotitnow"
     },
     "ios": {
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow JotItNow to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow JotItNow to use the microphone."
       },
-      "bundleIdentifier": "com.anonymous.jotitnow"
+      "bundleIdentifier": "com.navedmerchant.jotitnow"
     }
   }
 }

@@ -1,4 +1,4 @@
-package com.anonymous.jotitnow
+package com.navedmerchant.jotitnow
 import android.content.res.Configuration
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper

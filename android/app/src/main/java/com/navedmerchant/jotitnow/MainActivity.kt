@@ -1,4 +1,4 @@
-package com.anonymous.jotitnow
+package com.navedmerchant.jotitnow
 import expo.modules.ReactActivityDelegateWrapper
 
 import com.facebook.react.ReactActivity
