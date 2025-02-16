@@ -21,43 +21,10 @@ import { setActiveNoteId } from '../store/uiSlice';
 import { ChevronDown, ChevronUp, FileText } from 'lucide-react-native';
 import { debounce } from 'lodash';
 
-// Add type for the stop function
-type StopFunction = () => Promise<void>;
-
 // Add type for navigation
 type RecordScreenNavigationProp = MaterialTopTabNavigationProp<TabParamList>;
 
 type RecordScreenProps = {};
-
-// Add helper function at the top of the file, before the RecordScreen component
-const splitIntoChunks = (text: string, targetLength: number = 300): string[] => {
-  // Split into sentences (accounting for multiple punctuation types)
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-  const chunks: string[] = [];
-  let currentChunk = '';
-
-  for (const sentence of sentences) {
-    // Count words in current chunk plus new sentence
-    const potentialChunk = currentChunk + sentence;
-    const wordCount = potentialChunk.trim().split(/\s+/).length;
-
-    if (wordCount > targetLength && currentChunk) {
-      // If adding sentence exceeds limit and we have content, start new chunk
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-    } else {
-      // Add sentence to current chunk
-      currentChunk += sentence;
-    }
-  }
-
-  // Add remaining text if any
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
-};
 
 const SAVE_DELAY_MS = 1000; // 1 second delay
 
