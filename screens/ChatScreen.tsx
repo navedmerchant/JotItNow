@@ -37,6 +37,7 @@ const ChatScreen: React.FC<ChatScreenProps> = () => {
   const [hasContent, setHasContent] = useState(false);
 
   const chatContext = useRef('');
+  const usedChunks = useRef(new Set<string>());
   const scrollViewRef = useRef<ScrollView>(null);
   const textInputRef = useRef<TextInput>(null);
   const systemPrompt = useRef('');
@@ -135,10 +136,20 @@ const ChatScreen: React.FC<ChatScreenProps> = () => {
         firstChunk: similarChunks[0]?.chunk.substring(0, 50),
       });
 
-      // Build context from similar chunks
-      const contextText = similarChunks
-      .map(chunk => chunk.chunk)
-      .join('\n\n');
+      // Filter out chunks we've already used
+      const newChunks = similarChunks.filter(chunk => !usedChunks.current.has(chunk.chunk));
+      console.log('[ChatScreen] New chunks:', {
+        count: newChunks.length,
+        firstChunk: newChunks[0]?.chunk.substring(0, 50),
+      });
+
+      // Add new chunks to used set
+      newChunks.forEach(chunk => usedChunks.current.add(chunk.chunk));
+
+      // Build context from new chunks
+      const contextText = newChunks
+        .map(chunk => chunk.chunk)
+        .join('\n\n');
   
       let contextPrompt;
       // Add context to prompt if we have similar chunks

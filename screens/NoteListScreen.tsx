@@ -133,6 +133,8 @@ const NoteListScreen: React.FC<NoteListScreenProps> = ({ navigation }) => {
           <Swipeable
             renderRightActions={() => item.id ? renderRightActions(item.id) : null}
             rightThreshold={40}
+            friction={2}
+            overshootFriction={8}
           >
             <NoteItem 
               note={item} 

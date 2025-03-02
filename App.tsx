@@ -80,7 +80,7 @@ const NewNoteTabNavigator = () => {
         component={SummarizeScreen}
         initialParams={{ noteId: activeNoteId || undefined }}
         options={{ 
-          tabBarLabel: 'Summarize'
+          tabBarLabel: 'Process'
         }}
       />
       <Tab.Screen 

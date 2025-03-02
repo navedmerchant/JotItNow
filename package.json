@@ -10,9 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@op-engineering/op-sqlite": "^11.2.13",
+    "@op-engineering/op-sqlite": "^11.4.7",
     "@react-native-community/masked-view": "^0.1.11",
-    "@react-native-voice/voice": "^3.2.4",
     "@react-navigation/material-top-tabs": "^7.1.0",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",

@@ -369,7 +369,8 @@ const SummarizeScreen: React.FC<SummarizeScreenProps> = () => {
         ) : (
           <View style={styles.messageContainer}>
             <Text style={styles.messageText}>
-              Generate a summary to see it here
+              Click the button above to generate a summary, process your notes
+              so you can chat with them.
             </Text>
           </View>
         )}

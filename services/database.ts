@@ -165,18 +165,32 @@ export const findSimilarChunks = async (
       firstResultDistance: rows[0]?.distance
     });
 
-    // Filter out matches from the same note
+    // Filter out matches from other notes
     const filteredRows = rows.filter(row => row.noteId === noteId);
     console.log('Filtered results:', {
       originalCount: rows.length,
       filteredCount: filteredRows.length
     });
 
-    return filteredRows.map(row => ({
-      noteId: row.noteId,
-      chunk: row.chunk,
-      distance: row.distance
-    }));
+    // Remove duplicates based on chunk content
+    const uniqueChunks = new Map<string, { noteId: string; chunk: string; distance: number }>();
+    filteredRows.forEach(row => {
+      if (!uniqueChunks.has(row.chunk) || row.distance < uniqueChunks.get(row.chunk)!.distance) {
+        uniqueChunks.set(row.chunk, {
+          noteId: row.noteId,
+          chunk: row.chunk,
+          distance: row.distance
+        });
+      }
+    });
+
+    const results = Array.from(uniqueChunks.values());
+    console.log('Unique chunks:', {
+      count: results.length,
+      firstChunk: results[0]?.chunk.substring(0, 50)
+    });
+
+    return results;
     
   } catch (error) {
     console.error('Error finding similar chunks:', error);
@@ -213,6 +227,11 @@ export const deleteNoteEmbeddings = async (noteId: string) => {
 
 export async function hasAnyChunks(noteId: string): Promise<boolean> {
   try {
+    if (!noteId) {
+      console.error('Note ID is null in hasAnyChunks');
+      return false;
+    }
+
     const db = getDatabase();
     if (!db) {
       console.error('Database not initialized in hasAnyChunks');
