@@ -1,79 +1,85 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# JotItNow
 
-# Getting Started
+<p align="center">
+  <img src="assets/logo.png" alt="JotItNow Logo" width="200"/>
+</p>
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+> The ultimate note-taking app that combines powerful features with complete privacy.
 
-## Step 1: Start the Metro Server
+JotItNow is a powerful note-taking application that works entirely offline, ensuring complete privacy and security for your thoughts and ideas. Whether you're recording voice memos, writing down notes, or generating summaries, JotItNow makes it seamless – and it all works without an internet connection.
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+IOS only
 
-To start Metro, run the following command from the _root_ of your React Native project:
+## 🌟 Key Features
 
-```bash
-# using npm
-npm start
+- **Voice + Text Integration**: Record voice notes and jot down text notes simultaneously, keeping everything in sync.
+- **Intelligent Summarization**: Instantly generate summaries for long voice memos or text notes, saving you time and effort.
+- **Interactive Chat**: Ask questions and explore your notes with an intuitive chat interface that understands your content – all offline!
+- **100% Privacy**: No internet connection needed, ensuring complete privacy and no data tracking.
+- **Open Source & Free**: JotItNow is free to use and open source.
 
-# OR using Yarn
-yarn start
-```
+## 📱 Screenshots
 
-## Step 2: Start your Application
+<p align="center">
+  <img src="assets/screenshot1.png" alt="JotItNow Screenshot 1" width="200"/>
+  <img src="assets/screenshot2.png" alt="JotItNow Screenshot 2" width="200"/>
+  <img src="assets/screenshot3.png" alt="JotItNow Screenshot 3" width="200"/>
+</p>
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+## 🚀 Getting Started
 
-### For Android
+### Prerequisites
 
-```bash
-# using npm
-npm run android
+- iOS 15.0+ / macOS 12.0+
+- Xcode 13.0+
+- Swift 5.5+
 
-# OR using Yarn
-yarn android
-```
+### Installation
 
-### For iOS
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/navedmerchant/JotItNow.git
+   ```
 
-```bash
-# using npm
-npm run ios
+2. Build and run the application on your device or simulator.
+   ```
+   npx react-native run-ios
+   ```
 
-# OR using Yarn
-yarn ios
-```
+## 🛠️ Technical Details
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+JotItNow uses on-device machine learning to provide features like voice transcription, summarization, and chat capabilities without requiring an internet connection. This ensures your data never leaves your device.
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+### Core Technologies
 
-## Step 3: Modifying your App
+- Apple Speech Recognition for Voice Transcription
+- Llama.rn for running the model
+- Sqlite-vec for vector search
+- BGE for generating embeddings
 
-Now that you have successfully run the app, let's modify it.
+## 🤝 Contributing
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+Contributions are welcome! If you'd like to contribute to JotItNow, please follow these steps:
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
-## Congratulations! :tada:
+Please make sure to update tests as appropriate and adhere to the existing coding style.
 
-You've successfully run and modified your React Native App. :partying_face:
+## 📄 License
 
-### Now what?
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## 📞 Contact
 
-# Troubleshooting
+If you have any questions or suggestions, feel free to open an issue or contact the maintainers.
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+---
 
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+<p align="center">
+  Made with ❤️ by Naved Merchant
+</p>

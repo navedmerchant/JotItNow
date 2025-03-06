@@ -43,9 +43,9 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow JotItNow to use the microphone.</string>
+	<string>JotItNow uses the microphone to record audio notes and transcribe them. The audio and data never leaves your device</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Allow JotItNow to use speech recognition.</string>
+	<string>JotItNow uses speech recognition to transcribe your audio notes. This happens offline on your device and the data never leaves your device</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
@@ -72,10 +72,8 @@
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
-		<string>arm64</string>
+		<string>arm64e</string>
 		<string>telephony</string>
-		<string>metal</string>
 	</array>
 	<key>UIRequiresFullScreen</key>
 	<true/>
@@ -87,9 +85,9 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>UIBackgroundModes</key>
+	<key>UIDeviceFamily</key>
 	<array>
-		<string>audio</string>
+		<integer>1</integer>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app does not require access to the photo library.</string>
